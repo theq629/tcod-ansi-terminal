@@ -1,2 +1,11 @@
 [MESSAGES CONTROL]
 disable =
+	fixme,
+	invalid-name,
+	global-statement,
+	duplicate-code,
+	too-few-public-methods,
+	too-many-instance-attributes,
+	too-many-arguments,
+	missing-class-docstring,
+	missing-function-docstring,
