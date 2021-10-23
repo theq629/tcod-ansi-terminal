@@ -12,6 +12,7 @@ from tcod.event import Event
 from ._platform import Platform, make_platform
 from ._internal_event import EventsManager
 from ._abstract_context import MinimalContext
+from ._presenters import Presenter, NaivePresenter
 from . import _ansi
 
 _context_stack: List["TerminalContext"] = []
@@ -72,16 +73,19 @@ class TerminalContext(MinimalContext):
         console: Console,
         *,
         clear_color: Tuple[int, int, int] = (0, 0, 0),
-        align: Tuple[float, float] = (0.5, 0.5)
+        align: Tuple[float, float] = (0.5, 0.5),
+        presenter: Optional[Presenter] = None
     ) -> None:
-        _ansi.render_console(
+        # pylint: disable=arguments-differ
+        if presenter is None:
+            presenter = NaivePresenter()
+        presenter.present(
             console=console,
             term_dim=self._term_dim,
             align=align,
-                clear_colour=clear_color,
+            clear_colour=clear_color,
             out_file=self._out_file
         )
-        self._out_file.flush()
         self._do_resize()
 
     def pixel_to_tile(self, x: int, y: int) -> Tuple[int, int]:

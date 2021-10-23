@@ -6,7 +6,12 @@ from pathlib import Path
 import argparse
 import tcod
 import tcod_ansi_terminal
+from tcod_ansi_terminal.context import NaivePresenter
 from . import GameUi
+
+_presenters = {
+    'naive': NaivePresenter,
+}
 
 def main() -> None:
     title = "Test"
@@ -40,6 +45,15 @@ def main() -> None:
         help="The size of the TCOD console as a fraction of the terminal size."
     )
     argparser.add_argument(
+        '--presenter',
+        '-p',
+        dest='presenter',
+        type=str,
+        choices=set(_presenters),
+        default='naive',
+        help="The type of presenter to use in terminal mode."
+    )
+    argparser.add_argument(
         '--verbose',
         '-v',
         dest='verbose',
@@ -60,7 +74,9 @@ def main() -> None:
                 event_wait=tcod_ansi_terminal.event.wait,
                 console_order=args.console_order,
                 console_scale=args.console_scale,
-                present_kwargs={},
+                present_kwargs={
+                    'presenter': _presenters[args.presenter]()
+                },
                 verbose=args.verbose
             ).run()
 
@@ -83,7 +99,9 @@ def main() -> None:
                 event_wait=tcod.event.wait,
                 console_order=args.console_order,
                 console_scale=args.console_scale,
-                present_kwargs={'keep_aspect': True},
+                present_kwargs={
+                    'keep_aspect': True
+                },
                 verbose=args.verbose
             ).run()
 

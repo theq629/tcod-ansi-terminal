@@ -41,7 +41,7 @@ class MinimalContext(Protocol):
         console: Console,
         *,
         clear_color: Tuple[int, int, int] = (0, 0, 0),
-        align: Tuple[float, float] = (0.5, 0.5),
+        align: Tuple[float, float] = (0.5, 0.5)
     ) -> None:
         ...
 
