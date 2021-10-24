@@ -31,12 +31,19 @@ class Presenter(Protocol):
     ) -> None:
         ...
 
-class _ConsoleInfo(NamedTuple):
-    con_dim: Tuple[int, int]
+class _DrawPlan(NamedTuple):
+    draw_dim: Tuple[int, int]
+    pad_left: int
+    pad_top: int
     buf_get: Callable[[int, int, NDArray[Any]], Any]
 
-def _get_console_info(console: Console) -> _ConsoleInfo:
+def _get_draw_plan(
+    console: Console,
+    term_dim: Tuple[int, int],
+    align: Tuple[float, float]
+) -> _DrawPlan:
     order = get_console_order(console)
+
     con_dim = console.buffer.shape
     if order == "F":
         def buf_get(x: int, y: int, buf: NDArray[Any]) -> Any:
@@ -47,7 +54,12 @@ def _get_console_info(console: Console) -> _ConsoleInfo:
             return buf[y, x]
     else:
         assert False, "unknown console order"
-    return _ConsoleInfo(con_dim, buf_get)
+
+    draw_dim = (min(con_dim[0], term_dim[0]), min(con_dim[1], term_dim[1]))
+    pad_left = int((term_dim[0] - draw_dim[0]) * align[0])
+    pad_top = int((term_dim[1] - draw_dim[1]) * align[1])
+
+    return _DrawPlan(draw_dim, pad_left, pad_top, buf_get)
 
 def _draw_naive(
     *,
@@ -103,20 +115,14 @@ class NaivePresenter(Presenter):
     ) -> None:
         # pylint: disable=too-many-locals
 
-        con_dim, buf_get = _get_console_info(console)
-
-        draw_dim = (min(con_dim[0], term_dim[0]), min(con_dim[1], term_dim[1]))
-        pad_left = int((term_dim[0] - draw_dim[0]) * align[0])
-        pad_right = term_dim[0] - draw_dim[0] - pad_left
-        pad_top = int((term_dim[1] - draw_dim[1]) * align[1])
-        pad_bottom = term_dim[1] - draw_dim[1] - pad_top
+        draw_dim, pad_left, pad_top, buf_get = _get_draw_plan(console, term_dim, align)
 
         out_file.write(b''.join(_draw_naive(
             draw_dim=draw_dim,
             pad_left=pad_left,
-            pad_right=pad_right,
             pad_top=pad_top,
-            pad_bottom=pad_bottom,
+            pad_right=term_dim[0] - draw_dim[0] - pad_left,
+            pad_bottom=term_dim[1] - draw_dim[1] - pad_top,
             pad_bg=clear_colour + (0,),
             buf_get=buf_get,
             console=console
@@ -169,13 +175,12 @@ class SparsePresenter:
             )
 
         else:
-            con_dim, buf_get = _get_console_info(console)
-            draw_dim = (min(con_dim[0], term_dim[0]), min(con_dim[1], term_dim[1]))
+            draw_dim, pad_left, pad_top, buf_get = _get_draw_plan(console, term_dim, align)
             diff = console.buffer != self._last_buffer
             out_file.write(b''.join(_draw_sparse_changes(
                 draw_dim=draw_dim,
-                pad_top=int((term_dim[1] - draw_dim[1]) * align[1]) + 1,
-                pad_left=int((term_dim[0] - draw_dim[0]) * align[0]) + 1,
+                pad_left=pad_left + 1,
+                pad_top=pad_top + 1,
                 buf_get=buf_get,
                 to_draw=diff,
                 console=console
