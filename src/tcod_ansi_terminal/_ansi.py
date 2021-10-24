@@ -54,10 +54,9 @@ def get_terminal_size(out_file: BinaryIO, platform: Platform) -> Tuple[int, int]
         return 80, 24
     return w, h
 
-def set_colours_true(
+def make_set_colours_true(
     fg: Tuple[int, int, int, int],
     bg: Tuple[int, int, int, int],
-    out_file: BinaryIO
-) -> None:
-    out_file.write(b"[38;2;%i;%i;%im[48;2;%i;%i;%im" \
-                   % (fg[0], fg[1], fg[2], bg[0], bg[1], bg[2]))
+) -> bytes:
+    return b"[38;2;%i;%i;%im[48;2;%i;%i;%im" \
+        % (fg[0], fg[1], fg[2], bg[0], bg[1], bg[2])
