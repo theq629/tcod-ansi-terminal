@@ -108,7 +108,7 @@ class NaivePresenter(Presenter):
         draw_dim = (min(con_dim[0], term_dim[0]), min(con_dim[1], term_dim[1]))
         pad_left = int((term_dim[0] - draw_dim[0]) * align[0])
         pad_right = term_dim[0] - draw_dim[0] - pad_left
-        pad_top = int((term_dim[1] - draw_dim[1]) * align[0])
+        pad_top = int((term_dim[1] - draw_dim[1]) * align[1])
         pad_bottom = term_dim[1] - draw_dim[1] - pad_top
 
         out_file.write(b''.join(_draw_naive(
@@ -174,7 +174,7 @@ class SparsePresenter:
             diff = console.buffer != self._last_buffer
             out_file.write(b''.join(_draw_sparse_changes(
                 draw_dim=draw_dim,
-                pad_top=int((term_dim[1] - draw_dim[1]) * align[0]) + 1,
+                pad_top=int((term_dim[1] - draw_dim[1]) * align[1]) + 1,
                 pad_left=int((term_dim[0] - draw_dim[0]) * align[0]) + 1,
                 buf_get=buf_get,
                 to_draw=diff,
