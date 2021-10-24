@@ -7,7 +7,7 @@ import sys
 import os
 from ._abstract_context import MinimalContext
 from ._internal_context import TerminalContext, make_terminal_context
-from ._presenters import Presenter, NaivePresenter
+from ._presenters import Presenter, NaivePresenter, SparsePresenter
 
 __all__ = (
     'MinimalContext',
@@ -15,6 +15,7 @@ __all__ = (
     'new',
     'Presenter',
     'NaivePresenter',
+    'SparsePresenter',
 )
 
 def new(

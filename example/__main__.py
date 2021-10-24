@@ -6,11 +6,12 @@ from pathlib import Path
 import argparse
 import tcod
 import tcod_ansi_terminal
-from tcod_ansi_terminal.context import NaivePresenter
+from tcod_ansi_terminal.context import NaivePresenter, SparsePresenter
 from . import GameUi
 
 _presenters = {
     'naive': NaivePresenter,
+    'sparse': SparsePresenter,
 }
 
 def main() -> None:
