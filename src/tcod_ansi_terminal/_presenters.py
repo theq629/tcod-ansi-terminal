@@ -11,7 +11,7 @@ from numpy.typing import NDArray
 import numpy
 from tcod import Console
 from ._console_utils import get_console_order
-from ._ansi import make_set_colours_true
+from ._ansi import escape, make_set_colours_true
 
 _PAD_FG = (0, 0, 0, 0)
 
@@ -76,27 +76,27 @@ def _draw_naive(
 
     yield make_set_colours_true(_PAD_FG, pad_bg)
     for _ in range(pad_top):
-        yield b"[%i;1H" % (term_y)
-        yield b"[2K"
+        yield b"%s[%i;1H" % (escape, term_y)
+        yield b"%s[2K" % (escape)
         term_y += 1
 
     for con_y in range(draw_dim[1]):
-        yield b"[%i;%iH" % (term_y, pad_left + 1)
+        yield b"%s[%i;%iH" % (escape, term_y, pad_left + 1)
         yield make_set_colours_true(_PAD_FG, pad_bg)
-        yield b"[1K"
+        yield b"%s[1K" % (escape)
         for con_x in range(draw_dim[0]):
             c, fg, bg = buf_get(con_x, con_y, console.buffer)
             yield make_set_colours_true(fg, bg)
             yield c
         if pad_right > 0:
             yield make_set_colours_true(_PAD_FG, pad_bg)
-            yield b"[0K"
+            yield b"%s[0K" % (escape)
         term_y += 1
 
     yield make_set_colours_true(_PAD_FG, pad_bg)
     for _ in range(pad_bottom):
-        yield b"[%i;1H" % (term_y)
-        yield b"[2K"
+        yield b"%s[%i;1H" % (escape, term_y)
+        yield b"%s[2K" % (escape)
         term_y += 1
 
 class NaivePresenter(Presenter):
@@ -138,9 +138,9 @@ def _draw_sparse_changes(
     to_draw: NDArray[Any],
     console: Console
 ) -> Iterable[bytes]:
-    for con_x, con_y in numpy.ndindex(draw_dim): # type: ignore
+    for con_x, con_y in numpy.ndindex(draw_dim):
         if buf_get(con_x, con_y, to_draw):
-            yield b"[%i;%iH" % (con_y + pad_top, con_x + pad_left)
+            yield b"%s[%i;%iH" % (escape, con_y + pad_top, con_x + pad_left)
             c, fg, bg = buf_get(con_x, con_y, console.buffer)
             yield make_set_colours_true(fg, bg)
             yield c
@@ -186,6 +186,6 @@ class SparsePresenter:
                 console=console
             )))
 
-        self._last_buffer = numpy.copy(console.buffer) # type: ignore
+        self._last_buffer = numpy.copy(console.buffer)
 
         out_file.flush()

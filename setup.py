@@ -10,9 +10,9 @@ setup(
     package_dir = {'': "src"},
     packages = find_packages(where='src/'),
     install_requires = [
-        'numpy~=1.21.2',
-        'tcod~=13.0.0',
-        'typing-extensions~=3.10.0.2; python_version < "3.8"'
+        'numpy~=1.21',
+        'tcod~=13.0',
+        'typing-extensions~=3.10; python_version < "3.8"'
     ],
     package_data = {
         'tcod_ansi_terminal': ["py.typed"]

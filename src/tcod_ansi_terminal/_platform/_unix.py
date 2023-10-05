@@ -10,8 +10,6 @@ import signal
 import select
 
 class UnixPlatform:
-    # pylint: disable=no-self-use
-
     def __init__(self, in_file: BinaryIO):
         self.old_attrs: Optional[List[Union[int, List[Union[bytes, int]]]]] = None
         self._pipe_r, self._pipe_w = os.pipe()

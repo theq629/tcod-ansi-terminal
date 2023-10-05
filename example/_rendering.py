@@ -15,7 +15,7 @@ class WorldRenderer:
         self.world = world
 
         self._walls_update = numpy.full(world.dim, FLOOR_BG, dtype="3B")
-        for xy in numpy.ndindex(world.dim): # type: ignore
+        for xy in numpy.ndindex(world.dim):
             if world.walls[xy]:
                 self._walls_update[xy] = WALL_BG
         if console_order == 'C':
