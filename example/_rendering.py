@@ -4,7 +4,7 @@ Rendering of the world.
 
 from typing import Literal
 import numpy
-from tcod import Console
+from tcod.console import Console
 from ._world import World
 
 FLOOR_BG = (64, 64, 64)
@@ -22,7 +22,7 @@ class WorldRenderer:
             self._walls_update = self._walls_update.transpose(1, 0, 2)
 
     def render(self, console: Console) -> None:
-        i = min(console.buffer.shape[0], self._walls_update.shape[0])
-        j = min(console.buffer.shape[1], self._walls_update.shape[1])
+        i = min(console.rgba.shape[0], self._walls_update.shape[0])
+        j = min(console.rgba.shape[1], self._walls_update.shape[1])
         console.rgb['bg'][0:i, 0:j] = self._walls_update[0:i, 0:j]
         console.print(x=self.world.player_pos[0], y=self.world.player_pos[1], string="@")

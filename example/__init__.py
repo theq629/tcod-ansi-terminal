@@ -38,7 +38,7 @@ class GameUi:
         self.world = World(console_dim, rng)
         self.world_renderer = WorldRenderer(self.world, console_order)
 
-        self.root_console = tcod.Console(*console_dim, order=console_order)
+        self.root_console = tcod.console.Console(*console_dim, order=console_order)
 
         self.present_times = Sampler()
 
@@ -59,15 +59,15 @@ class GameUi:
                 self._quit()
             elif isinstance(event, KeyDown):
                 key = event.sym
-                if key == tcod.event.K_q:
+                if key == tcod.event.KeySym.q:
                     self._quit()
-                elif key in (tcod.event.K_UP, tcod.event.K_k):
+                elif key in (tcod.event.KeySym.UP, tcod.event.KeySym.k):
                     self.world.move_player((0, -1))
-                elif key in (tcod.event.K_DOWN, tcod.event.K_j):
+                elif key in (tcod.event.KeySym.DOWN, tcod.event.KeySym.j):
                     self.world.move_player((0, 1))
-                elif key in (tcod.event.K_LEFT, tcod.event.K_h):
+                elif key in (tcod.event.KeySym.LEFT, tcod.event.KeySym.h):
                     self.world.move_player((-1, 0))
-                elif key in (tcod.event.K_RIGHT, tcod.event.K_l):
+                elif key in (tcod.event.KeySym.RIGHT, tcod.event.KeySym.l):
                     self.world.move_player((1, 0))
 
     def _quit(self) -> NoReturn:

@@ -3,8 +3,8 @@ This is the internal event system including hooks for the context.
 """
 
 from typing import Optional, Iterator, Tuple
-from tcod.event import Event, KeyDown, KeyUp, TextInput, Quit, WindowResized, KMOD_NONE, \
-    KMOD_SHIFT, K_UNKNOWN
+from tcod.event import Event, KeyDown, KeyUp, TextInput, Quit, WindowResized, Scancode, \
+    KMOD_NONE, KMOD_SHIFT
 from ._platform import Platform
 
 class EventsManager:
@@ -39,6 +39,6 @@ class EventsManager:
             else:
                 mod = KMOD_NONE
             key_sym = ord(key)
-            yield KeyDown(sym=key_sym, scancode=K_UNKNOWN, mod=mod)
+            yield KeyDown(sym=key_sym, scancode=Scancode.UNKNOWN, mod=mod)
             yield TextInput(text=key_text)
-            yield KeyUp(sym=key_sym, scancode=K_UNKNOWN, mod=mod)
+            yield KeyUp(sym=key_sym, scancode=Scancode.UNKNOWN, mod=mod)

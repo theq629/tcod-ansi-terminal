@@ -9,7 +9,7 @@ except ImportError:
     from typing_extensions import Protocol # type: ignore
 from numpy.typing import NDArray
 import numpy
-from tcod import Console
+from tcod.console import Console
 from ._console_utils import get_console_order
 from ._ansi import escape, make_set_colours_true
 
@@ -44,7 +44,7 @@ def _get_draw_plan(
 ) -> _DrawPlan:
     order = get_console_order(console)
 
-    con_dim = console.buffer.shape
+    con_dim = console.rgba.shape
     if order == "F":
         def buf_get(x: int, y: int, buf: NDArray[Any]) -> Any:
             return buf[x, y]
@@ -85,7 +85,7 @@ def _draw_naive(
         yield make_set_colours_true(_PAD_FG, pad_bg)
         yield b"%s[1K" % (escape)
         for con_x in range(draw_dim[0]):
-            c, fg, bg = buf_get(con_x, con_y, console.buffer)
+            c, fg, bg = buf_get(con_x, con_y, console.rgba)
             yield make_set_colours_true(fg, bg)
             yield c
         if pad_right > 0:
@@ -141,7 +141,7 @@ def _draw_sparse_changes(
     for con_x, con_y in numpy.ndindex(draw_dim):
         if buf_get(con_x, con_y, to_draw):
             yield b"%s[%i;%iH" % (escape, con_y + pad_top, con_x + pad_left)
-            c, fg, bg = buf_get(con_x, con_y, console.buffer)
+            c, fg, bg = buf_get(con_x, con_y, console.rgba)
             yield make_set_colours_true(fg, bg)
             yield c
 
@@ -165,7 +165,7 @@ class SparsePresenter:
     ) -> None:
         # pylint: disable=too-many-locals
 
-        if console.buffer.shape != self._last_buffer.shape:
+        if console.rgba.shape != self._last_buffer.shape:
             self._fallback.present(
                 console=console,
                 term_dim=term_dim,
@@ -176,7 +176,7 @@ class SparsePresenter:
 
         else:
             draw_dim, pad_left, pad_top, buf_get = _get_draw_plan(console, term_dim, align)
-            diff = console.buffer != self._last_buffer
+            diff = console.rgba != self._last_buffer
             out_file.write(b''.join(_draw_sparse_changes(
                 draw_dim=draw_dim,
                 pad_left=pad_left + 1,
@@ -186,6 +186,6 @@ class SparsePresenter:
                 console=console
             )))
 
-        self._last_buffer = numpy.copy(console.buffer)
+        self._last_buffer = numpy.copy(console.rgba)
 
         out_file.flush()

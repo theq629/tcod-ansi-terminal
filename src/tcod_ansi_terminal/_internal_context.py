@@ -2,18 +2,20 @@
 This is the internal context system.
 """
 
-from typing import Any, Optional, Sequence, Tuple, List, BinaryIO
+from typing import TypeVar, Any, Optional, Sequence, Tuple, List, BinaryIO
 try:
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal # type: ignore
-from tcod import Console
+from tcod.console import Console
 from tcod.event import Event
 from ._platform import Platform, make_platform
 from ._internal_event import EventsManager
 from ._abstract_context import MinimalContext
 from ._presenters import Presenter, NaivePresenter
 from . import _ansi
+
+E = TypeVar("E", bound=Event)
 
 _context_stack: List["TerminalContext"] = []
 
@@ -94,8 +96,8 @@ class TerminalContext(MinimalContext):
     def pixel_to_subtile(self, x: int, y: int) -> Tuple[float, float]:
         return x, y
 
-    def convert_event(self, event: Event) -> None:
-        return None
+    def convert_event(self, event: E) -> E:
+        return event
 
     def new_console(
         self,

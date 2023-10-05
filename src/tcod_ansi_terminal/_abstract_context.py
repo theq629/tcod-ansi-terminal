@@ -8,10 +8,11 @@ try:
     from typing import Literal, Protocol # pylint: disable=ungrouped-imports
 except ImportError:
     from typing_extensions import Literal, Protocol # type: ignore
-from tcod import Console
+from tcod.console import Console
 from tcod.event import Event
 
 C = TypeVar('C', bound="MinimalContext")
+E = TypeVar("E", bound=Event)
 
 class MinimalContext(Protocol):
     """
@@ -51,7 +52,7 @@ class MinimalContext(Protocol):
     def pixel_to_subtile(self, x: int, y: int) -> Tuple[float, float]:
         ...
 
-    def convert_event(self, event: Event) -> None:
+    def convert_event(self, event: E) -> E:
         ...
 
     def new_console(
