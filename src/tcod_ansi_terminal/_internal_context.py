@@ -29,22 +29,11 @@ class TerminalContext(MinimalContext):
 
     _out_file: BinaryIO
     _platform: Platform
-    _events_manager: EventsManager
     _term_dim: Tuple[int, int]
-    _resize_waiting: bool
+    _events_manager: EventsManager
 
-    def _on_resize(self) -> None:
-        self._resize_waiting = True
-
-    def _do_resize(self) -> None:
-        if not self._resize_waiting:
-            return
-        self._term_dim = _ansi.get_terminal_size(self._out_file, self._platform)
-        self._events_manager.on_resize(self._term_dim)
-        self._resize_waiting = False
-
-    def _on_quit(self) -> None:
-        self._events_manager.on_quit()
+    def _on_resize(self, width: int, height: int) -> None:
+        self._term_dim = (width, height)
 
     def _open(self, requested_dim: Optional[Tuple[int, int]], title: Optional[str]) -> None:
         _ansi.hide_cursor(self._out_file)
@@ -88,7 +77,6 @@ class TerminalContext(MinimalContext):
             clear_colour=clear_color,
             out_file=self._out_file
         )
-        self._do_resize()
 
     def pixel_to_tile(self, x: int, y: int) -> Tuple[int, int]:
         return x, y
@@ -135,11 +123,9 @@ def make_terminal_context(
     new._out_file = out_file
     new._platform = make_platform(in_file)
     new._platform.open()
+    new._term_dim = (0, 0)
+    new._events_manager = EventsManager(new._platform, new._out_file, new._on_resize)
     new._open(requested_dim, title)
-    new._events_manager = EventsManager(new._platform)
-    new._term_dim = _ansi.get_terminal_size(new._out_file, new._platform)
-    new._platform.watch_resize(new._on_resize)
-    new._platform.watch_quit(new._on_quit)
-    new._resize_waiting = False
+    new._events_manager.request_resize_event()
     _context_stack.append(new)
     return new
