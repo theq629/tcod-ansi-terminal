@@ -26,3 +26,4 @@ class WorldRenderer:
         j = min(console.rgba.shape[1], self._walls_update.shape[1])
         console.rgb['bg'][0:i, 0:j] = self._walls_update[0:i, 0:j]
         console.print(x=self.world.player_pos[0], y=self.world.player_pos[1], string="@")
+        console.print(x=2, y=0, string=f"{console.width}x{console.height}")
