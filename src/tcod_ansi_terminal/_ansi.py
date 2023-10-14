@@ -37,12 +37,22 @@ class MouseButtonInput:
 class MouseWheelInput:
     button: int
 
+@dataclasses.dataclass(frozen=True)
+class WindowFocusGained:
+    pass
+
+@dataclasses.dataclass(frozen=True)
+class WindowFocusLost:
+    pass
+
 EscapeInputEvent = Union[
     WindowResizeInput,
     SpecialKeyInput,
     MouseMotionInput,
     MouseButtonInput,
     MouseWheelInput,
+    WindowFocusGained,
+    WindowFocusLost,
 ]
 
 def reset(out_file: BinaryIO) -> None:
@@ -59,6 +69,12 @@ def enable_mouse_tracking(out_file: BinaryIO) -> None:
 
 def disable_mouse_tracking(out_file: BinaryIO) -> None:
     out_file.write(b"%s[?1003l" % (escape))
+
+def enable_focus_reporting(out_file: BinaryIO) -> None:
+    out_file.write(b"%s[?1004h" % (escape))
+
+def disable_focus_reporting(out_file: BinaryIO) -> None:
+    out_file.write(b"%s[?1004l" % (escape))
 
 def request_terminal_dim(dim: Tuple[int, int], out_file: BinaryIO) -> None:
     w, h = dim
@@ -128,6 +144,10 @@ def get_escape_input(
             return WindowResizeInput(width=result.arg1, height=result.arg0)
         if result.end == b'M':
             return _get_mouse_input(platform, timeout)
+        if result.end == b'I':
+            return WindowFocusGained()
+        if result.end == b'O':
+            return WindowFocusLost()
         if result.end == b'A':
             return SpecialKeyInput(KeySym.UP)
         if result.end == b'B':

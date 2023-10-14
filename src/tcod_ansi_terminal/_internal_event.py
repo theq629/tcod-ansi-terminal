@@ -5,7 +5,8 @@ This is the internal event system including hooks for the context.
 from typing import Optional, Callable, Iterator, List, Tuple, BinaryIO
 import time
 from tcod.event import Event, KeySym, Scancode, MouseButton, KeyDown, KeyUp, TextInput, Quit, \
-    WindowResized, MouseMotion, MouseWheel, MouseButtonUp, MouseButtonDown, KMOD_NONE, KMOD_SHIFT
+    WindowResized, MouseMotion, MouseWheel, MouseButtonUp, MouseButtonDown, WindowEvent, \
+    KMOD_NONE, KMOD_SHIFT
 from ._logging import logger
 from ._platform import Platform
 from . import _ansi
@@ -154,5 +155,9 @@ class EventsManager:
             yield from self._handle_mouse_button(event)
         elif isinstance(event, _ansi.MouseWheelInput):
             yield from self._handle_mouse_wheel(event)
+        elif isinstance(event, _ansi.WindowFocusGained):
+            yield WindowEvent(type='WindowFocusGained')
+        elif isinstance(event, _ansi.WindowFocusLost):
+            yield WindowEvent(type='WindowFocusLost')
         else:
             logger.warning("unhandled escape input: %r", event)

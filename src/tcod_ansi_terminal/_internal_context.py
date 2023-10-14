@@ -38,6 +38,7 @@ class TerminalContext(MinimalContext):
     def _open(self, requested_dim: Optional[Tuple[int, int]], title: Optional[str]) -> None:
         _ansi.hide_cursor(self._out_file)
         _ansi.enable_mouse_tracking(self._out_file)
+        _ansi.enable_focus_reporting(self._out_file)
         if requested_dim is not None:
             _ansi.request_terminal_dim(requested_dim, self._out_file)
         if title is not None:
@@ -53,6 +54,7 @@ class TerminalContext(MinimalContext):
         _ansi.clear_screen(self._out_file)
         _ansi.show_cursor(self._out_file)
         _ansi.disable_mouse_tracking(self._out_file)
+        _ansi.disable_focus_reporting(self._out_file)
         _ansi.reset(self._out_file)
         self._out_file.flush()
         self._platform.close()
