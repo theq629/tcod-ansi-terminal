@@ -127,7 +127,6 @@ class NaivePresenter(Presenter):
             buf_get=buf_get,
             console=console
         )))
-        out_file.flush()
 
 def _draw_sparse_changes(
     *,
@@ -187,5 +186,3 @@ class SparsePresenter:
             )))
 
         self._last_buffer = numpy.copy(console.rgba)
-
-        out_file.flush()

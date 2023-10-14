@@ -48,6 +48,7 @@ class EventsManager:
 
     def catchup(self) -> None:
         if self._got_resize:
+            _ansi.save_cursor_pos(self._out_file)
             _ansi.request_get_terminal_dim(self._out_file)
             self._out_file.flush()
             time.sleep(_terminal_response_delay)
@@ -72,6 +73,7 @@ class EventsManager:
 
     def _finalize_resize(self, width: int, height: int) -> None:
         self._got_resize = False
+        _ansi.restore_cursor_pos(self._out_file)
         self._resize_callback(width, height)
 
     def _handle_input(self, timeout: Optional[float]) -> Iterator[TerminalEvent]:

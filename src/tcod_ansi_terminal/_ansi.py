@@ -98,6 +98,12 @@ def set_cursor_pos(pos: Tuple[int, int], out_file: BinaryIO) -> None:
     x, y = pos
     out_file.write(b"%s[%i;%iH" % (escape, y, x))
 
+def save_cursor_pos(out_file: BinaryIO) -> None:
+    out_file.write(b"%ss" % (escape))
+
+def restore_cursor_pos(out_file: BinaryIO) -> None:
+    out_file.write(b"%su" % (escape))
+
 def request_get_cursor_pos(out_file: BinaryIO) -> None:
     out_file.write(b"%s[6n" % (escape))
 

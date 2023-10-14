@@ -10,7 +10,7 @@ import argparse
 import tcod.event
 from tcod.console import Console
 from tcod.event import Event, Quit, KeyDown, MouseMotion, WindowResized
-from tcod_ansi_terminal.context import TerminalCompatibleContext
+from tcod_ansi_terminal.context import TerminalCompatibleContext, TerminalContext
 from tcod_ansi_terminal.event import TerminalCompatibleEventWait
 from ._world import World
 from ._rendering import WorldRenderer
@@ -45,7 +45,9 @@ class GameUi:
 
     def run(self) -> None:
         while True:
-            self.world_renderer.render(self.root_console)
+            if isinstance(self.context, TerminalContext):
+                self.context.cursor_position = self.world.player_pos
+            self.world_renderer.render(self.root_console, self.context)
             present_start_time = time.time()
             self.context.present(self.root_console, clear_color=(64, 64, 0), **self.present_kwargs)
             self.present_times.sample(time.time() - present_start_time)

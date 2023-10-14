@@ -30,6 +30,7 @@ class TerminalContext(TerminalCompatibleContext):
     _out_file: BinaryIO
     _platform: Platform
     _term_dim: Tuple[int, int]
+    cursor_position: Tuple[int, int]
     _events_manager: EventsManager
 
     def _on_resize(self, width: int, height: int) -> None:
@@ -44,6 +45,7 @@ class TerminalContext(TerminalCompatibleContext):
         title: Optional[str],
     ) -> None:
         _ansi.hide_cursor(self._out_file)
+        _ansi.set_cursor_pos((0, 0), self._out_file)
         _ansi.enable_mouse_tracking(self._out_file)
         _ansi.enable_focus_reporting(self._out_file)
         if requested_window_pos is not None:
@@ -92,6 +94,9 @@ class TerminalContext(TerminalCompatibleContext):
             clear_colour=clear_color,
             out_file=self._out_file
         )
+        cur_x, cur_y = self.cursor_position
+        _ansi.set_cursor_pos((cur_x + 1, cur_y + 1), self._out_file)
+        self._out_file.flush()
 
     def pixel_to_tile(self, x: int, y: int) -> Tuple[int, int]:
         return x, y
@@ -137,6 +142,7 @@ def make_terminal_context(
     new._platform = make_platform(in_file)
     new._platform.open()
     new._term_dim = (0, 0)
+    new.cursor_position = (0, 0)
     new._events_manager = EventsManager(new._platform, new._out_file, new._on_resize)
     new._open(
         requested_window_pos=requested_window_pos,
