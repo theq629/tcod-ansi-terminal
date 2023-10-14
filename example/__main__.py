@@ -69,9 +69,9 @@ def main() -> None:
             columns=default_term_width,
             rows=default_term_height,
             title=title
-        ) as regular_context:
+        ) as terminal_context:
             GameUi(
-                context=regular_context,
+                context=terminal_context,
                 event_wait=tcod_ansi_terminal.event.wait,
                 console_order=args.console_order,
                 console_scale=args.console_scale,
@@ -94,9 +94,9 @@ def main() -> None:
             tileset=tileset,
             title=title,
             vsync=True,
-        ) as terminal_context:
+        ) as regular_context:
             GameUi(
-                context=terminal_context,
+                context=regular_context,
                 event_wait=tcod.event.wait,
                 console_order=args.console_order,
                 console_scale=args.console_scale,
