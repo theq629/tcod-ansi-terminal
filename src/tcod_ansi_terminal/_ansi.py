@@ -25,9 +25,24 @@ class WindowResizeInput:
 class SpecialKeyInput:
     key_sym: KeySym
 
+@dataclasses.dataclass(frozen=True)
+class MouseMotionInput:
+    pos: Tuple[int, int]
+
+@dataclasses.dataclass(frozen=True)
+class MouseButtonInput:
+    button: int
+
+@dataclasses.dataclass(frozen=True)
+class MouseWheelInput:
+    button: int
+
 EscapeInputEvent = Union[
     WindowResizeInput,
     SpecialKeyInput,
+    MouseMotionInput,
+    MouseButtonInput,
+    MouseWheelInput,
 ]
 
 def reset(out_file: BinaryIO) -> None:
@@ -38,6 +53,12 @@ def hide_cursor(out_file: BinaryIO) -> None:
 
 def show_cursor(out_file: BinaryIO) -> None:
     out_file.write(b"%s[?25h" % (escape))
+
+def enable_mouse_tracking(out_file: BinaryIO) -> None:
+    out_file.write(b"%s[?1003h" % (escape))
+
+def disable_mouse_tracking(out_file: BinaryIO) -> None:
+    out_file.write(b"%s[?1003l" % (escape))
 
 def request_terminal_dim(dim: Tuple[int, int], out_file: BinaryIO) -> None:
     w, h = dim
@@ -79,6 +100,21 @@ def _read_escape_input(platform: Platform, timeout: Optional[int]) -> Optional[_
         arg1 = None
     return _EscapeInputResult(start=start, end=end, arg0=arg0, arg1=arg1)
 
+def _get_mouse_input(platform: Platform, timeout: Optional[int]) -> Optional[EscapeInputEvent]:
+    cb_ch = platform.getch(timeout)
+    x_ch = platform.getch(timeout)
+    y_ch = platform.getch(timeout)
+    if cb_ch is None or x_ch is None or y_ch is None:
+        return None
+    cb = cb_ch[0]
+    x = x_ch[0] - 33
+    y = y_ch[0] - 33
+    if cb & 32 != 0:
+        if cb & 64 != 0:
+            return MouseWheelInput(button=cb & 3)
+        return MouseButtonInput(button=cb & 3)
+    return MouseMotionInput(pos=(x, y))
+
 def get_escape_input(
     platform: Platform,
     timeout: Optional[int] = None,
@@ -90,6 +126,8 @@ def get_escape_input(
     if result.start == b'[': # CSI
         if result.end == b'R' and result.arg1 is not None:
             return WindowResizeInput(width=result.arg1, height=result.arg0)
+        if result.end == b'M':
+            return _get_mouse_input(platform, timeout)
         if result.end == b'A':
             return SpecialKeyInput(KeySym.UP)
         if result.end == b'B':

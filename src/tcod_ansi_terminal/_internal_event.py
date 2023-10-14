@@ -2,10 +2,10 @@
 This is the internal event system including hooks for the context.
 """
 
-from typing import Optional, Callable, Iterator, List, BinaryIO
+from typing import Optional, Callable, Iterator, List, Tuple, BinaryIO
 import time
-from tcod.event import Event, KeyDown, KeyUp, TextInput, Quit, WindowResized, KeySym, Scancode, \
-    KMOD_NONE, KMOD_SHIFT
+from tcod.event import Event, KeySym, Scancode, MouseButton, KeyDown, KeyUp, TextInput, Quit, \
+    WindowResized, MouseMotion, MouseWheel, MouseButtonUp, MouseButtonDown, KMOD_NONE, KMOD_SHIFT
 from ._logging import logger
 from ._platform import Platform
 from . import _ansi
@@ -26,6 +26,8 @@ class EventsManager:
         self._got_resize = False
         self._waiting_events: List[Event] = []
         self._resize_callback = resize_callback
+        self._last_mouse_motion: Optional[Tuple[int, int]] = None
+        self._current_mouse_button_down: Optional[int] = None
         platform.watch_quit(self._on_quit)
         platform.watch_resize(self._on_resize)
         self.catchup()
@@ -86,6 +88,56 @@ class EventsManager:
         yield KeyDown(sym=key_sym, scancode=Scancode.UNKNOWN, mod=KMOD_NONE)
         yield KeyUp(sym=key_sym, scancode=Scancode.UNKNOWN, mod=KMOD_NONE)
 
+    def _handle_mouse_motion(self, event: _ansi.MouseMotionInput) -> Iterator[Event]:
+        if self._last_mouse_motion is not None:
+            motion = (
+                event.pos[0] - self._last_mouse_motion[0],
+                event.pos[1] - self._last_mouse_motion[1],
+            )
+        else:
+            motion = (0, 0)
+        self._last_mouse_motion = event.pos
+        yield MouseMotion(position=event.pos, motion=motion, tile=event.pos)
+
+    def _handle_mouse_button(self, event: _ansi.MouseButtonInput) -> Iterator[Event]:
+        if self._last_mouse_motion is None:
+            logger.warning("mouse button but don't have position")
+            return
+        if event.button == 3:
+            if self._current_mouse_button_down is None:
+                logger.warning("mouse button up but didn't know it was down")
+                return
+            button = self._current_mouse_button_down
+            self._current_mouse_button_down = None
+            yield MouseButtonUp(
+                pixel=self._last_mouse_motion,
+                tile=self._last_mouse_motion,
+                button=button,
+            )
+        else:
+            if event.button == 0:
+                button = MouseButton.LEFT
+            elif event.button == 1:
+                button = MouseButton.MIDDLE
+            elif event.button == 2:
+                button = MouseButton.RIGHT
+            else:
+                logger.warning("unhandled mouse button: %r", event)
+            self._current_mouse_button_down = button
+            yield MouseButtonDown(
+                pixel=self._last_mouse_motion,
+                tile=self._last_mouse_motion,
+                button=button,
+            )
+
+    def _handle_mouse_wheel(self, event: _ansi.MouseWheelInput) -> Iterator[Event]:
+        if event.button == 0:
+            yield MouseWheel(x=0, y=1, flipped=False)
+        elif event.button == 1:
+            yield MouseWheel(x=0, y=-1, flipped=False)
+        else:
+            logger.warning("unhandled mouse wheel button: %r", event)
+
     def _handle_escape_input(self, event: _ansi.EscapeInputEvent) -> Iterator[Event]:
         if isinstance(event, _ansi.WindowResizeInput):
             self._finalize_resize(event.width, event.height)
@@ -96,5 +148,11 @@ class EventsManager:
             )
         elif isinstance(event, _ansi.SpecialKeyInput):
             yield from self._handle_special_key(event.key_sym)
+        elif isinstance(event, _ansi.MouseMotionInput):
+            yield from self._handle_mouse_motion(event)
+        elif isinstance(event, _ansi.MouseButtonInput):
+            yield from self._handle_mouse_button(event)
+        elif isinstance(event, _ansi.MouseWheelInput):
+            yield from self._handle_mouse_wheel(event)
         else:
             logger.warning("unhandled escape input: %r", event)
