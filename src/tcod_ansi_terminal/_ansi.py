@@ -4,6 +4,7 @@ ANSI terminal control.
 
 from typing import Union, Optional, Tuple, BinaryIO, NamedTuple
 import dataclasses
+from tcod.event import KeySym
 from ._logging import logger
 from ._platform import Platform
 
@@ -20,8 +21,13 @@ class WindowResizeInput:
     width: int
     height: int
 
+@dataclasses.dataclass(frozen=True)
+class SpecialKeyInput:
+    key_sym: KeySym
+
 EscapeInputEvent = Union[
     WindowResizeInput,
+    SpecialKeyInput,
 ]
 
 def reset(out_file: BinaryIO) -> None:
@@ -77,12 +83,83 @@ def get_escape_input(
     platform: Platform,
     timeout: Optional[int] = None,
 ) -> Optional[EscapeInputEvent]:
+    # pylint: disable=too-many-branches,too-many-return-statements
     result = _read_escape_input(platform, timeout)
     if result is None:
         return None
-    if result.start == b'[':
+    if result.start == b'[': # CSI
         if result.end == b'R' and result.arg1 is not None:
             return WindowResizeInput(width=result.arg1, height=result.arg0)
+        if result.end == b'A':
+            return SpecialKeyInput(KeySym.UP)
+        if result.end == b'B':
+            return SpecialKeyInput(KeySym.DOWN)
+        if result.end == b'C':
+            return SpecialKeyInput(KeySym.RIGHT)
+        if result.end == b'D':
+            return SpecialKeyInput(KeySym.LEFT)
+        if result.end == b'H':
+            return SpecialKeyInput(KeySym.HOME)
+        if result.end == b'F':
+            return SpecialKeyInput(KeySym.END)
+        if result.end == b'P':
+            return SpecialKeyInput(KeySym.F1)
+        if result.end == b'Q':
+            return SpecialKeyInput(KeySym.F2)
+        if result.end == b'R':
+            return SpecialKeyInput(KeySym.F3)
+        if result.end == b'S':
+            return SpecialKeyInput(KeySym.F4)
+        if result.end == b'~' and result.arg0 is not None:
+            if result.arg0 == 1:
+                return SpecialKeyInput(KeySym.HOME)
+            if result.arg0 == 2:
+                return SpecialKeyInput(KeySym.INSERT)
+            if result.arg0 == 3:
+                return SpecialKeyInput(KeySym.DELETE)
+            if result.arg0 == 4:
+                return SpecialKeyInput(KeySym.END)
+            if result.arg0 == 5:
+                return SpecialKeyInput(KeySym.PAGEUP)
+            if result.arg0 == 6:
+                return SpecialKeyInput(KeySym.PAGEDOWN)
+            if result.arg0 == 7:
+                return SpecialKeyInput(KeySym.HOME)
+            if result.arg0 == 8:
+                return SpecialKeyInput(KeySym.END)
+            if result.arg0 == 11:
+                return SpecialKeyInput(KeySym.F1)
+            if result.arg0 == 12:
+                return SpecialKeyInput(KeySym.F2)
+            if result.arg0 == 13:
+                return SpecialKeyInput(KeySym.F3)
+            if result.arg0 == 14:
+                return SpecialKeyInput(KeySym.F4)
+            if result.arg0 == 15:
+                return SpecialKeyInput(KeySym.F5)
+            if result.arg0 == 17:
+                return SpecialKeyInput(KeySym.F6)
+            if result.arg0 == 18:
+                return SpecialKeyInput(KeySym.F7)
+            if result.arg0 == 19:
+                return SpecialKeyInput(KeySym.F8)
+            if result.arg0 == 20:
+                return SpecialKeyInput(KeySym.F9)
+            if result.arg0 == 21:
+                return SpecialKeyInput(KeySym.F10)
+            if result.arg0 == 23:
+                return SpecialKeyInput(KeySym.F11)
+            if result.arg0 == 24:
+                return SpecialKeyInput(KeySym.F12)
+    elif result.start == b'O': # SS3
+        if result.end == b'P':
+            return SpecialKeyInput(KeySym.F1)
+        if result.end == b'Q':
+            return SpecialKeyInput(KeySym.F2)
+        if result.end == b'R':
+            return SpecialKeyInput(KeySym.F3)
+        if result.end == b'S':
+            return SpecialKeyInput(KeySym.F4)
     logger.debug("unknown escape: %r", result)
     return None
 

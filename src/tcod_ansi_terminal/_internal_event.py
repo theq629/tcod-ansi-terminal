@@ -4,7 +4,7 @@ This is the internal event system including hooks for the context.
 
 from typing import Optional, Callable, Iterator, List, BinaryIO
 import time
-from tcod.event import Event, KeyDown, KeyUp, TextInput, Quit, WindowResized, Scancode, \
+from tcod.event import Event, KeyDown, KeyUp, TextInput, Quit, WindowResized, KeySym, Scancode, \
     KMOD_NONE, KMOD_SHIFT
 from ._logging import logger
 from ._platform import Platform
@@ -82,6 +82,10 @@ class EventsManager:
         yield TextInput(text=key_text)
         yield KeyUp(sym=key_sym, scancode=Scancode.UNKNOWN, mod=mod)
 
+    def _handle_special_key(self, key_sym: KeySym) -> Iterator[Event]:
+        yield KeyDown(sym=key_sym, scancode=Scancode.UNKNOWN, mod=KMOD_NONE)
+        yield KeyUp(sym=key_sym, scancode=Scancode.UNKNOWN, mod=KMOD_NONE)
+
     def _handle_escape_input(self, event: _ansi.EscapeInputEvent) -> Iterator[Event]:
         if isinstance(event, _ansi.WindowResizeInput):
             self._finalize_resize(event.width, event.height)
@@ -90,5 +94,7 @@ class EventsManager:
                 width=event.width,
                 height=event.height,
             )
+        elif isinstance(event, _ansi.SpecialKeyInput):
+            yield from self._handle_special_key(event.key_sym)
         else:
             logger.warning("unhandled escape input: %r", event)
