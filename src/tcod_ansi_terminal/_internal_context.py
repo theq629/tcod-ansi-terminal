@@ -11,7 +11,7 @@ from tcod.console import Console
 from tcod.event import Event
 from ._platform import Platform, make_platform
 from ._internal_event import EventsManager
-from ._abstract_context import MinimalContext
+from ._abstract_context import TerminalCompatibleContext
 from ._presenters import Presenter, NaivePresenter
 from . import _ansi
 
@@ -19,7 +19,7 @@ E = TypeVar("E", bound=Event)
 
 _context_stack: List["TerminalContext"] = []
 
-class TerminalContext(MinimalContext):
+class TerminalContext(TerminalCompatibleContext):
     """
     TCOD-compatible context that writes to a terminal.
 

@@ -5,12 +5,12 @@ TCOD-compatible contexts that will write to a terminal.
 from typing import Optional
 import sys
 import os
-from ._abstract_context import MinimalContext
+from ._abstract_context import TerminalCompatibleContext
 from ._internal_context import TerminalContext, make_terminal_context
 from ._presenters import Presenter, NaivePresenter, SparsePresenter
 
 __all__ = (
-    'MinimalContext',
+    'TerminalCompatibleContext',
     'TerminalContext',
     'new',
     'Presenter',

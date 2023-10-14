@@ -1,7 +1,7 @@
 from tcod.context import Context
-from tcod_ansi_terminal.context import MinimalContext, TerminalContext
+from tcod_ansi_terminal.context import TerminalCompatibleContext, TerminalContext
 
-def _use_context(_context: MinimalContext) -> None:
+def _use_context(_context: TerminalCompatibleContext) -> None:
     pass
 
 def _use_tcod_context(context: Context) -> None:

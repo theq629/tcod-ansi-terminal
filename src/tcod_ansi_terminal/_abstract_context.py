@@ -11,10 +11,10 @@ except ImportError:
 from tcod.console import Console
 from tcod.event import Event
 
-C = TypeVar('C', bound="MinimalContext")
+C = TypeVar('C', bound="TerminalCompatibleContext")
 E = TypeVar("E", bound=Event)
 
-class MinimalContext(Protocol):
+class TerminalCompatibleContext(Protocol):
     """
     Protocol for contexts which covers basic functionality that can be supported on terminals.
 

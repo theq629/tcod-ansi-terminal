@@ -9,7 +9,7 @@ from random import Random
 import argparse
 import tcod.event
 from tcod.event import Event, Quit, KeyDown
-from tcod_ansi_terminal.context import MinimalContext
+from tcod_ansi_terminal.context import TerminalCompatibleContext
 from ._world import World
 from ._rendering import WorldRenderer
 from ._sampling import Sampler
@@ -17,7 +17,7 @@ from ._sampling import Sampler
 class GameUi:
     def __init__(
         self,
-        context: MinimalContext,
+        context: TerminalCompatibleContext,
         event_wait: Callable[[], Iterator[Event]],
         console_order: Literal['C', 'F'],
         console_scale: float,
