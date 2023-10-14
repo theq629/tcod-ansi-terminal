@@ -230,7 +230,7 @@ def get_escape_input(
     return None
 
 def request_get_terminal_dim(out_file: BinaryIO) -> None:
-    b = 2**16 - 1
+    b = 2**15 - 1
     out_file.write(b"%s[%i;%iH" % (escape, b, b))
     out_file.flush()
     out_file.write(b"%s[6n" % (escape))
