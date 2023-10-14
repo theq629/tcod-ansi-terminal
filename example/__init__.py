@@ -15,6 +15,8 @@ from ._world import World
 from ._rendering import WorldRenderer
 from ._sampling import Sampler
 
+_WAIT_TIMEOUT = 0.1
+
 class GameUi:
     def __init__(
         self,
@@ -53,7 +55,7 @@ class GameUi:
             self._handle_events()
 
     def _handle_events(self) -> None:
-        for event in self.event_wait():
+        for event in self.event_wait(_WAIT_TIMEOUT):
             if event.type and self.verbose:
                 print("EVENT", event, file=sys.stderr)
             if isinstance(event, Quit):
