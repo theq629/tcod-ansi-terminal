@@ -32,7 +32,8 @@ class WorldRenderer:
             x=2,
             y=0,
             string=
-                f"size {(console.width, console.height)}"
+                f"console size {(console.width, console.height)}"
+                f" world size {self.world.dim}"
                 f" mouse {tuple(self.mouse_position) if self.mouse_position is not None else None}"
                 f" time {int(time.time())}"
         )

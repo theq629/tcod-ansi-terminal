@@ -8,7 +8,8 @@ import time
 from random import Random
 import argparse
 import tcod.event
-from tcod.event import Event, Quit, KeyDown, MouseMotion
+from tcod.console import Console
+from tcod.event import Event, Quit, KeyDown, MouseMotion, WindowResized
 from tcod_ansi_terminal.context import TerminalCompatibleContext
 from tcod_ansi_terminal.event import TerminalCompatibleEventWait
 from ._world import World
@@ -29,19 +30,16 @@ class GameUi:
     ) -> None:
         self.context = context
         self.event_wait = event_wait
+        self.console_order = console_order
+        self.console_scale = console_scale
         self.verbose = verbose
         self.present_kwargs = present_kwargs
 
-        term_dim = context.recommended_console_size()
-        if verbose:
-            print(f"TERMINAL SIZE {term_dim[0]}x{term_dim[1]}", file=sys.stderr)
-        console_dim = int(term_dim[0] * console_scale), int(term_dim[1] * console_scale)
+        self.root_console = self._make_console()
 
         rng = Random(0)
-        self.world = World(console_dim, rng)
+        self.world = World((self.root_console.width, self.root_console.height), rng)
         self.world_renderer = WorldRenderer(self.world, console_order)
-
-        self.root_console = tcod.console.Console(*console_dim, order=console_order)
 
         self.present_times = Sampler()
 
@@ -53,6 +51,13 @@ class GameUi:
             self.present_times.sample(time.time() - present_start_time)
             self.root_console.clear()
             self._handle_events()
+
+    def _make_console(self) -> Console:
+        term_dim = self.context.recommended_console_size()
+        if self.verbose:
+            print(f"TERMINAL SIZE {term_dim[0]}x{term_dim[1]}", file=sys.stderr)
+        console_dim = int(term_dim[0] * self.console_scale), int(term_dim[1] * self.console_scale)
+        return Console(*console_dim, order=self.console_order)
 
     def _handle_events(self) -> None:
         for event in self.event_wait(_WAIT_TIMEOUT):
@@ -74,6 +79,8 @@ class GameUi:
                     self.world.move_player((1, 0))
             elif isinstance(event, MouseMotion):
                 self.world_renderer.mouse_position = event.position
+            elif isinstance(event, WindowResized):
+                self.root_console = self._make_console()
 
     def _quit(self) -> NoReturn:
         if self.verbose:
