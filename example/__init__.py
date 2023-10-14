@@ -8,7 +8,7 @@ import time
 from random import Random
 import argparse
 import tcod.event
-from tcod.event import Event, Quit, KeyDown
+from tcod.event import Event, Quit, KeyDown, MouseMotion
 from tcod_ansi_terminal.context import TerminalCompatibleContext
 from tcod_ansi_terminal.event import TerminalCompatibleEventWait
 from ._world import World
@@ -72,6 +72,8 @@ class GameUi:
                     self.world.move_player((-1, 0))
                 elif key in (tcod.event.KeySym.RIGHT, tcod.event.KeySym.l):
                     self.world.move_player((1, 0))
+            elif isinstance(event, MouseMotion):
+                self.world_renderer.mouse_position = event.position
 
     def _quit(self) -> NoReturn:
         if self.verbose:
