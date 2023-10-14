@@ -91,12 +91,20 @@ def request_terminal_window_pos(pos: Tuple[int, int], out_file: BinaryIO) -> Non
 def request_terminal_title(title: str, out_file: BinaryIO) -> None:
     out_file.write(b"%s]0;%s\007" % (escape, title.encode('utf8')))
 
-def set_cursor_pos(pos: Tuple[int, int], out_file: BinaryIO) -> None:
-    x, y = pos
-    out_file.write(b"%s[%i;%if" % (escape, y, x))
-
 def clear_screen(out_file: BinaryIO) -> None:
     out_file.write(b"%s[2J" % (escape))
+
+def set_cursor_pos(pos: Tuple[int, int], out_file: BinaryIO) -> None:
+    x, y = pos
+    out_file.write(b"%s[%i;%iH" % (escape, y, x))
+
+def request_get_cursor_pos(out_file: BinaryIO) -> None:
+    out_file.write(b"%s[6n" % (escape))
+
+def request_get_terminal_dim(out_file: BinaryIO) -> None:
+    b = 2**15 - 1
+    set_cursor_pos((b, b), out_file)
+    request_get_cursor_pos(out_file)
 
 def _read_terminated_int(
     platform: Platform,
@@ -228,11 +236,6 @@ def get_escape_input(
             return SpecialKeyInput(KeySym.F4)
     logger.debug("unknown escape: %r", result)
     return None
-
-def request_get_terminal_dim(out_file: BinaryIO) -> None:
-    b = 2**15 - 1
-    out_file.write(b"%s[%i;%iH" % (escape, b, b))
-    out_file.write(b"%s[6n" % (escape))
 
 def make_set_colours_true(
     fg: Tuple[int, int, int, int],
