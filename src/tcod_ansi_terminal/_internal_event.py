@@ -2,9 +2,9 @@
 This is the internal event system including hooks for the context.
 """
 
-from typing import Optional, Callable, Iterator, List, Tuple, BinaryIO
+from typing import Union, Optional, Callable, Iterator, List, Tuple, BinaryIO
 import time
-from tcod.event import Event, KeySym, Scancode, MouseButton, KeyDown, KeyUp, TextInput, Quit, \
+from tcod.event import KeySym, Scancode, MouseButton, KeyDown, KeyUp, TextInput, Quit, \
     WindowResized, MouseMotion, MouseWheel, MouseButtonUp, MouseButtonDown, WindowEvent, \
     KMOD_NONE, KMOD_SHIFT
 from ._logging import logger
@@ -13,6 +13,19 @@ from . import _ansi
 
 _terminal_response_delay = 0.05
 _catchup_read_timeout = 100
+
+TerminalEvent = Union[
+    KeyDown,
+    KeyUp,
+    TextInput,
+    Quit,
+    WindowResized,
+    MouseMotion,
+    MouseWheel,
+    MouseButtonUp,
+    MouseButtonDown,
+    WindowEvent,
+]
 
 class EventsManager:
     def __init__(
@@ -25,7 +38,7 @@ class EventsManager:
         self._out_file = out_file
         self._got_quit = False
         self._got_resize = False
-        self._waiting_events: List[Event] = []
+        self._waiting_events: List[TerminalEvent] = []
         self._resize_callback = resize_callback
         self._last_mouse_motion: Optional[Tuple[int, int]] = None
         self._current_mouse_button_down: Optional[int] = None
@@ -39,7 +52,7 @@ class EventsManager:
             time.sleep(_terminal_response_delay)
             self._waiting_events += self._handle_input(_catchup_read_timeout)
 
-    def wait(self, timeout: Optional[float] = None) -> Iterator[Event]:
+    def wait(self, timeout: Optional[float] = None) -> Iterator[TerminalEvent]:
         self.catchup()
         if self._waiting_events:
             yield from self._waiting_events
@@ -60,7 +73,7 @@ class EventsManager:
         self._got_resize = False
         self._resize_callback(width, height)
 
-    def _handle_input(self, timeout: Optional[float]) -> Iterator[Event]:
+    def _handle_input(self, timeout: Optional[float]) -> Iterator[TerminalEvent]:
         key = self._platform.getch(timeout)
         if self._got_quit:
             yield Quit()
@@ -73,7 +86,7 @@ class EventsManager:
             else:
                 yield from self._handle_key_press(key)
 
-    def _handle_key_press(self, key: bytes) -> Iterator[Event]:
+    def _handle_key_press(self, key: bytes) -> Iterator[TerminalEvent]:
         key_text = key.decode('ascii')
         if key.isupper():
             key = key.lower()
@@ -85,11 +98,11 @@ class EventsManager:
         yield TextInput(text=key_text)
         yield KeyUp(sym=key_sym, scancode=Scancode.UNKNOWN, mod=mod)
 
-    def _handle_special_key(self, key_sym: KeySym) -> Iterator[Event]:
+    def _handle_special_key(self, key_sym: KeySym) -> Iterator[TerminalEvent]:
         yield KeyDown(sym=key_sym, scancode=Scancode.UNKNOWN, mod=KMOD_NONE)
         yield KeyUp(sym=key_sym, scancode=Scancode.UNKNOWN, mod=KMOD_NONE)
 
-    def _handle_mouse_motion(self, event: _ansi.MouseMotionInput) -> Iterator[Event]:
+    def _handle_mouse_motion(self, event: _ansi.MouseMotionInput) -> Iterator[TerminalEvent]:
         if self._last_mouse_motion is not None:
             motion = (
                 event.pos[0] - self._last_mouse_motion[0],
@@ -100,7 +113,7 @@ class EventsManager:
         self._last_mouse_motion = event.pos
         yield MouseMotion(position=event.pos, motion=motion, tile=event.pos)
 
-    def _handle_mouse_button(self, event: _ansi.MouseButtonInput) -> Iterator[Event]:
+    def _handle_mouse_button(self, event: _ansi.MouseButtonInput) -> Iterator[TerminalEvent]:
         if self._last_mouse_motion is None:
             logger.warning("mouse button but don't have position")
             return
@@ -131,7 +144,7 @@ class EventsManager:
                 button=button,
             )
 
-    def _handle_mouse_wheel(self, event: _ansi.MouseWheelInput) -> Iterator[Event]:
+    def _handle_mouse_wheel(self, event: _ansi.MouseWheelInput) -> Iterator[TerminalEvent]:
         if event.button == 0:
             yield MouseWheel(x=0, y=1, flipped=False)
         elif event.button == 1:
@@ -139,7 +152,7 @@ class EventsManager:
         else:
             logger.warning("unhandled mouse wheel button: %r", event)
 
-    def _handle_escape_input(self, event: _ansi.EscapeInputEvent) -> Iterator[Event]:
+    def _handle_escape_input(self, event: _ansi.EscapeInputEvent) -> Iterator[TerminalEvent]:
         if isinstance(event, _ansi.WindowResizeInput):
             self._finalize_resize(event.width, event.height)
             yield WindowResized(
