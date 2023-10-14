@@ -88,9 +88,9 @@ def main() -> None:
             8,
             tcod.tileset.CHARMAP_TCOD
         )
-        with tcod.context.new_terminal(
-            default_term_width,
-            default_term_height,
+        with tcod.context.new(
+            columns=default_term_width,
+            rows=default_term_height,
             tileset=tileset,
             title=title,
             vsync=True,
