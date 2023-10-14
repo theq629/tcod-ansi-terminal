@@ -49,6 +49,7 @@ class EventsManager:
     def catchup(self) -> None:
         if self._got_resize:
             _ansi.request_get_terminal_dim(self._out_file)
+            self._out_file.flush()
             time.sleep(_terminal_response_delay)
             self._waiting_events += self._handle_input(_catchup_read_timeout)
 

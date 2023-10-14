@@ -232,9 +232,7 @@ def get_escape_input(
 def request_get_terminal_dim(out_file: BinaryIO) -> None:
     b = 2**15 - 1
     out_file.write(b"%s[%i;%iH" % (escape, b, b))
-    out_file.flush()
     out_file.write(b"%s[6n" % (escape))
-    out_file.flush()
 
 def make_set_colours_true(
     fg: Tuple[int, int, int, int],
