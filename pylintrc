@@ -9,3 +9,4 @@ disable =
 	too-many-arguments,
 	missing-class-docstring,
 	missing-function-docstring,
+	use-dict-literal,

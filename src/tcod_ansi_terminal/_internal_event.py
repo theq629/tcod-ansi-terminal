@@ -11,7 +11,7 @@ from ._logging import logger
 from ._platform import Platform
 from . import _ansi
 
-_terminal_response_delay = 0.01
+_terminal_response_delay = 0.05
 _catchup_read_timeout = 100
 
 class EventsManager:

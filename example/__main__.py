@@ -15,10 +15,6 @@ _presenters = {
 }
 
 def main() -> None:
-    title = "Test"
-    default_term_width = 80
-    default_term_height = 50
-
     argparser = argparse.ArgumentParser(description="tcod terminal test")
     argparser.add_argument(
         '--terminal',
@@ -55,6 +51,48 @@ def main() -> None:
         help="The type of presenter to use in terminal mode."
     )
     argparser.add_argument(
+        '--x',
+        dest='window_x',
+        type=int,
+        default=None,
+        help="The requested x position of the console window in pixels."
+    )
+    argparser.add_argument(
+        '--y',
+        dest='window_y',
+        type=int,
+        default=None,
+        help="The requested y position of the console window in pixels."
+    )
+    argparser.add_argument(
+        '--width',
+        dest='width',
+        type=int,
+        default=None,
+        help="The requested width of the console in pixels."
+    )
+    argparser.add_argument(
+        '--height',
+        dest='height',
+        type=int,
+        default=None,
+        help="The requested height of the console in pixels."
+    )
+    argparser.add_argument(
+        '--columns',
+        dest='columns',
+        type=int,
+        default=80,
+        help="The requested width of the console in characters."
+    )
+    argparser.add_argument(
+        '--rows',
+        dest='rows',
+        type=int,
+        default=50,
+        help="The requested height of the console in characters."
+    )
+    argparser.add_argument(
         '--verbose',
         '-v',
         dest='verbose',
@@ -64,21 +102,30 @@ def main() -> None:
     )
     args = argparser.parse_args()
 
+    context_kwargs = dict(
+        title="Test",
+        x=args.window_x,
+        y=args.window_y,
+        width=args.width,
+        height=args.height,
+        columns=args.columns,
+        rows=args.rows,
+    )
+    game_ui_kwargs = dict(
+        console_order=args.console_order,
+        console_scale=args.console_scale,
+        verbose=args.verbose,
+    )
+
     if args.use_terminal:
-        with tcod_ansi_terminal.context.new(
-            columns=default_term_width,
-            rows=default_term_height,
-            title=title
-        ) as terminal_context:
+        with tcod_ansi_terminal.context.new(**context_kwargs) as terminal_context:
             GameUi(
                 context=terminal_context,
                 event_wait=tcod_ansi_terminal.event.wait,
-                console_order=args.console_order,
-                console_scale=args.console_scale,
                 present_kwargs={
                     'presenter': _presenters[args.presenter]()
                 },
-                verbose=args.verbose
+                **game_ui_kwargs
             ).run()
 
     else:
@@ -89,21 +136,17 @@ def main() -> None:
             tcod.tileset.CHARMAP_TCOD
         )
         with tcod.context.new(
-            columns=default_term_width,
-            rows=default_term_height,
             tileset=tileset,
-            title=title,
             vsync=True,
+            **context_kwargs
         ) as regular_context:
             GameUi(
                 context=regular_context,
                 event_wait=tcod.event.wait,
-                console_order=args.console_order,
-                console_scale=args.console_scale,
                 present_kwargs={
                     'keep_aspect': True
                 },
-                verbose=args.verbose
+                **game_ui_kwargs
             ).run()
 
 if __name__ == "__main__":

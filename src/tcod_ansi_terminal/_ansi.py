@@ -76,9 +76,17 @@ def enable_focus_reporting(out_file: BinaryIO) -> None:
 def disable_focus_reporting(out_file: BinaryIO) -> None:
     out_file.write(b"%s[?1004l" % (escape))
 
-def request_terminal_dim(dim: Tuple[int, int], out_file: BinaryIO) -> None:
+def request_terminal_chars_dim(dim: Tuple[int, int], out_file: BinaryIO) -> None:
     w, h = dim
     out_file.write(b"%s[8;%i;%it" % (escape, h, w))
+
+def request_terminal_pixels_dim(dim: Tuple[int, int], out_file: BinaryIO) -> None:
+    w, h = dim
+    out_file.write(b"%s[4;%i;%it" % (escape, h, w))
+
+def request_terminal_window_pos(pos: Tuple[int, int], out_file: BinaryIO) -> None:
+    x, y = pos
+    out_file.write(b"%s[3;%i;%it" % (escape, x, y))
 
 def request_terminal_title(title: str, out_file: BinaryIO) -> None:
     out_file.write(b"%s]0;%s\007" % (escape, title.encode('utf8')))

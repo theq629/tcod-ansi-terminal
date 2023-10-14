@@ -35,12 +35,23 @@ class TerminalContext(MinimalContext):
     def _on_resize(self, width: int, height: int) -> None:
         self._term_dim = (width, height)
 
-    def _open(self, requested_dim: Optional[Tuple[int, int]], title: Optional[str]) -> None:
+    def _open(
+        self,
+        *,
+        requested_window_pos: Optional[Tuple[int, int]],
+        requested_pixels_dim: Optional[Tuple[int, int]],
+        requested_chars_dim: Optional[Tuple[int, int]],
+        title: Optional[str],
+    ) -> None:
         _ansi.hide_cursor(self._out_file)
         _ansi.enable_mouse_tracking(self._out_file)
         _ansi.enable_focus_reporting(self._out_file)
-        if requested_dim is not None:
-            _ansi.request_terminal_dim(requested_dim, self._out_file)
+        if requested_window_pos is not None:
+            _ansi.request_terminal_window_pos(requested_window_pos, self._out_file)
+        if requested_pixels_dim is not None:
+            _ansi.request_terminal_pixels_dim(requested_pixels_dim, self._out_file)
+        elif requested_chars_dim is not None:
+            _ansi.request_terminal_chars_dim(requested_chars_dim, self._out_file)
         if title is not None:
             _ansi.request_terminal_title(title, self._out_file)
         self._out_file.flush()
@@ -112,24 +123,27 @@ def get_events_manager(context: TerminalContext) -> EventsManager:
     return context._events_manager
 
 def make_terminal_context(
+    *,
     in_file: BinaryIO,
     out_file: BinaryIO,
-    requested_width: Optional[int] = None,
-    requested_height: Optional[int] = None,
+    requested_window_pos: Optional[Tuple[int, int]] = None,
+    requested_pixels_dim: Optional[Tuple[int, int]] = None,
+    requested_chars_dim: Optional[Tuple[int, int]] = None,
     title: Optional[str] = None
 ) -> TerminalContext:
     # pylint: disable=protected-access
-    if requested_width is not None and requested_height is not None:
-        requested_dim: Optional[Tuple[int, int]] = (requested_width, requested_height)
-    else:
-        requested_dim = None
     new: TerminalContext = TerminalContext.__new__(TerminalContext)
     new._out_file = out_file
     new._platform = make_platform(in_file)
     new._platform.open()
     new._term_dim = (0, 0)
     new._events_manager = EventsManager(new._platform, new._out_file, new._on_resize)
-    new._open(requested_dim, title)
+    new._open(
+        requested_window_pos=requested_window_pos,
+        requested_pixels_dim=requested_pixels_dim,
+        requested_chars_dim=requested_chars_dim,
+        title=title,
+    )
     new._events_manager.request_resize_event()
     _context_stack.append(new)
     return new
