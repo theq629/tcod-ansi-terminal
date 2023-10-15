@@ -27,6 +27,7 @@ class WorldRenderer:
     def render(self, console: Console, context: TerminalCompatibleContext) -> None:
         self._render_world(console)
         self._render_info(console, context)
+        self._render_colour_test(console)
 
     def _render_world(self, console: Console) -> None:
         i = min(console.rgba.shape[0], self._walls_update.shape[0])
@@ -46,3 +47,9 @@ class WorldRenderer:
                 f" time {int(time.time())}"
                 f" cursor {cursor_pos}"
         )
+
+    def _render_colour_test(self, console: Console) -> None:
+        width = console.width
+        y = console.height - 1
+        for x in range(width):
+            console.print(x=x, y=y, string="#", fg=(int((x / width) * 255), 0, 0))
