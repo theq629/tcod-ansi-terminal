@@ -3,7 +3,6 @@ This is the internal event system including hooks for the context.
 """
 
 from typing import Union, Optional, Callable, Iterator, List, Tuple, BinaryIO
-import time
 from tcod.event import KeySym, Scancode, MouseButton, KeyDown, KeyUp, TextInput, Quit, \
     WindowResized, MouseMotion, MouseWheel, MouseButtonUp, MouseButtonDown, WindowEvent, \
     KMOD_NONE, KMOD_SHIFT
@@ -11,7 +10,6 @@ from ._logging import logger
 from ._platform import Platform
 from . import _ansi
 
-_terminal_response_delay = 0.05
 _catchup_read_timeout = 100
 
 TerminalEvent = Union[
@@ -64,8 +62,8 @@ class EventsManager:
             _ansi.save_cursor_pos(self._out_file)
             _ansi.request_get_terminal_dim(self._out_file)
             self._out_file.flush()
-            time.sleep(_terminal_response_delay)
-            self._waiting_events += self._handle_input(_catchup_read_timeout)
+            while self._got_resize:
+                self._waiting_events += self._handle_input(_catchup_read_timeout)
 
     def _on_quit(self) -> None:
         self._got_quit = True
