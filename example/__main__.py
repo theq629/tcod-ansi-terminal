@@ -3,6 +3,7 @@ Main for example.
 """
 
 from pathlib import Path
+import logging
 import argparse
 import tcod
 import tcod_ansi_terminal
@@ -94,14 +95,29 @@ def main() -> None:
         help="The requested height of the console in characters."
     )
     argparser.add_argument(
+        '--log',
+        '-l',
+        dest='log_path',
+        type=Path,
+        default=None,
+        help="Path for log file.",
+    )
+    argparser.add_argument(
         '--verbose',
         '-v',
-        dest='verbose',
-        default=False,
-        action='store_true',
-        help="Log more info to stderr."
+        dest='log_level',
+        type=lambda s: s.upper(),
+        default='info',
+        help="Set Python log level."
     )
     args = argparser.parse_args()
+
+    if args.log_path is not None:
+        logging.basicConfig(
+            filename=args.log_path,
+            filemode='a',
+            level=args.log_level,
+        )
 
     context_kwargs = dict(
         title="Test",
@@ -115,7 +131,6 @@ def main() -> None:
     game_ui_kwargs = dict(
         console_order=args.console_order,
         console_scale=args.console_scale,
-        verbose=args.verbose,
     )
 
     if args.use_terminal:

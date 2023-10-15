@@ -12,6 +12,7 @@ from tcod.console import Console
 from tcod.event import Event, Quit, KeyDown, MouseMotion, WindowResized
 from tcod_ansi_terminal.context import TerminalCompatibleContext, TerminalContext
 from tcod_ansi_terminal.event import TerminalCompatibleEventWait
+from ._logging import logger
 from ._world import World
 from ._rendering import WorldRenderer
 from ._sampling import Sampler
@@ -26,13 +27,11 @@ class GameUi:
         console_order: Literal['C', 'F'],
         console_scale: float,
         present_kwargs: Mapping[str, Any],
-        verbose: bool
     ) -> None:
         self.context = context
         self.event_wait = event_wait
         self.console_order = console_order
         self.console_scale = console_scale
-        self.verbose = verbose
         self.present_kwargs = present_kwargs
 
         self.root_console = self._make_console(self.context.recommended_console_size())
@@ -55,17 +54,16 @@ class GameUi:
             self._handle_events()
 
     def _make_console(self, term_dim: Tuple[int, int]) -> Console:
-        if self.verbose:
-            print(f"TERMINAL SIZE {term_dim[0]}x{term_dim[1]}", file=sys.stderr)
         # The console scale here is just for testing that present() doesn't
         # crash if the console size is bigger or smaller than the terminal.
         console_dim = int(term_dim[0] * self.console_scale), int(term_dim[1] * self.console_scale)
+        logger.info("terminal size %r console size %r", term_dim, console_dim)
         return Console(*console_dim, order=self.console_order)
 
     def _handle_events(self) -> None:
         for event in self.event_wait(_WAIT_TIMEOUT):
-            if event.type and self.verbose:
-                print("EVENT", event, file=sys.stderr)
+            if event.type:
+                logger.info("event %r", event)
             if isinstance(event, Quit):
                 self._quit()
             elif isinstance(event, KeyDown):
@@ -86,12 +84,10 @@ class GameUi:
                 self.root_console = self._make_console((event.width, event.height))
 
     def _quit(self) -> NoReturn:
-        if self.verbose:
-            print(
-                f"PRESENT TIME"
-                f" min {self.present_times.minimum:0.4f}"
-                f" max {self.present_times.maximum:0.4f}"
-                f" mean {self.present_times.mean:0.4f}",
-                file=sys.stderr
-            )
+        logger.info(
+            "present time stats min %0.4f max %0.4f mean %0.4f",
+            self.present_times.minimum,
+            self.present_times.maximum,
+            self.present_times.mean,
+        )
         raise SystemExit()
