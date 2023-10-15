@@ -18,8 +18,7 @@ class _EscapeInputResult(NamedTuple):
 
 @dataclasses.dataclass(frozen=True)
 class WindowResizeInput:
-    width: int
-    height: int
+    dim: Tuple[int, int]
 
 @dataclasses.dataclass(frozen=True)
 class SpecialKeyInput:
@@ -163,7 +162,7 @@ def get_escape_input(
         return None
     if result.start == b'[': # CSI
         if result.end == b'R' and result.arg1 is not None:
-            return WindowResizeInput(width=result.arg1, height=result.arg0)
+            return WindowResizeInput(dim=(result.arg1, result.arg0))
         if result.end == b'M':
             return _get_mouse_input(platform, timeout)
         if result.end == b'I':

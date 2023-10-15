@@ -29,11 +29,11 @@ TerminalEvent = Union[
 
 class EventsManager:
     def __init__(
-            self,
-            platform: Platform,
-            out_file: BinaryIO,
-            resize_callback: Callable[[int, int], None],
-    ):
+        self,
+        platform: Platform,
+        out_file: BinaryIO,
+        resize_callback: Callable[[Tuple[int, int]], None]
+    ) -> None:
         self._platform = platform
         self._out_file = out_file
         self._got_quit = False
@@ -42,11 +42,24 @@ class EventsManager:
         self._resize_callback = resize_callback
         self._last_mouse_motion: Optional[Tuple[int, int]] = None
         self._current_mouse_button_down: Optional[int] = None
+        self._last_term_dim: Optional[Tuple[int, int]] = None
         platform.watch_quit(self._on_quit)
         platform.watch_resize(self._on_resize)
-        self.catchup()
+        self._catchup()
 
-    def catchup(self) -> None:
+    def wait(self, timeout: Optional[float] = None) -> Iterator[TerminalEvent]:
+        self._catchup()
+        if self._waiting_events:
+            yield from self._waiting_events
+            self._waiting_events.clear()
+        yield from self._handle_input(timeout)
+
+    def get_terminal_dim(self) -> Optional[Tuple[int, int]]:
+        self._got_resize = True
+        self._catchup()
+        return self._last_term_dim
+
+    def _catchup(self) -> None:
         if self._got_resize:
             _ansi.save_cursor_pos(self._out_file)
             _ansi.request_get_terminal_dim(self._out_file)
@@ -54,27 +67,11 @@ class EventsManager:
             time.sleep(_terminal_response_delay)
             self._waiting_events += self._handle_input(_catchup_read_timeout)
 
-    def wait(self, timeout: Optional[float] = None) -> Iterator[TerminalEvent]:
-        self.catchup()
-        if self._waiting_events:
-            yield from self._waiting_events
-            self._waiting_events.clear()
-        yield from self._handle_input(timeout)
-
-    def request_resize_event(self) -> None:
-        self._got_resize = True
-        self.catchup()
-
     def _on_quit(self) -> None:
         self._got_quit = True
 
     def _on_resize(self) -> None:
         self._got_resize = True
-
-    def _finalize_resize(self, width: int, height: int) -> None:
-        self._got_resize = False
-        _ansi.restore_cursor_pos(self._out_file)
-        self._resize_callback(width, height)
 
     def _handle_input(self, timeout: Optional[float]) -> Iterator[TerminalEvent]:
         key = self._platform.getch(timeout)
@@ -88,6 +85,18 @@ class EventsManager:
                     yield from self._handle_escape_input(result)
             else:
                 yield from self._handle_key_press(key)
+
+    def _handle_resize(self, event: _ansi.WindowResizeInput) -> Iterator[TerminalEvent]:
+        self._got_resize = False
+        _ansi.restore_cursor_pos(self._out_file)
+        if event.dim != self._last_term_dim:
+            self._resize_callback(event.dim)
+            self._last_term_dim = event.dim
+            yield WindowResized(
+                type='WINDOWRESIZED',
+                width=event.dim[0],
+                height=event.dim[1],
+            )
 
     def _handle_key_press(self, key: bytes) -> Iterator[TerminalEvent]:
         key_text = key.decode('ascii')
@@ -157,12 +166,7 @@ class EventsManager:
 
     def _handle_escape_input(self, event: _ansi.EscapeInputEvent) -> Iterator[TerminalEvent]:
         if isinstance(event, _ansi.WindowResizeInput):
-            self._finalize_resize(event.width, event.height)
-            yield WindowResized(
-                type='WINDOWRESIZED',
-                width=event.width,
-                height=event.height,
-            )
+            yield from self._handle_resize(event)
         elif isinstance(event, _ansi.SpecialKeyInput):
             yield from self._handle_special_key(event.key_sym)
         elif isinstance(event, _ansi.MouseMotionInput):

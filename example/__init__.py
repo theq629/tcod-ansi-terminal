@@ -2,7 +2,7 @@
 Example and testing program.
 """
 
-from typing import Any, NoReturn, Callable, Literal, Iterator, Mapping
+from typing import Any, NoReturn, Callable, Literal, Iterator, Mapping, Tuple
 import sys
 import time
 from random import Random
@@ -35,7 +35,7 @@ class GameUi:
         self.verbose = verbose
         self.present_kwargs = present_kwargs
 
-        self.root_console = self._make_console()
+        self.root_console = self._make_console(self.context.recommended_console_size())
 
         rng = Random(0)
         self.world = World((self.root_console.width, self.root_console.height), rng)
@@ -54,8 +54,7 @@ class GameUi:
             self.root_console.clear()
             self._handle_events()
 
-    def _make_console(self) -> Console:
-        term_dim = self.context.recommended_console_size()
+    def _make_console(self, term_dim: Tuple[int, int]) -> Console:
         if self.verbose:
             print(f"TERMINAL SIZE {term_dim[0]}x{term_dim[1]}", file=sys.stderr)
         console_dim = int(term_dim[0] * self.console_scale), int(term_dim[1] * self.console_scale)
@@ -82,7 +81,7 @@ class GameUi:
             elif isinstance(event, MouseMotion):
                 self.world_renderer.mouse_position = event.position
             elif isinstance(event, WindowResized):
-                self.root_console = self._make_console()
+                self.root_console = self._make_console((event.width, event.height))
 
     def _quit(self) -> NoReturn:
         if self.verbose:

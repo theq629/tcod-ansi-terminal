@@ -29,12 +29,9 @@ class TerminalContext(TerminalCompatibleContext):
 
     _out_file: BinaryIO
     _platform: Platform
-    _term_dim: Tuple[int, int]
+    _last_term_dim: Tuple[int, int]
     cursor_position: Tuple[int, int]
     _events_manager: EventsManager
-
-    def _on_resize(self, width: int, height: int) -> None:
-        self._term_dim = (width, height)
 
     def _open(
         self,
@@ -89,7 +86,7 @@ class TerminalContext(TerminalCompatibleContext):
             presenter = NaivePresenter()
         presenter.present(
             console=console,
-            term_dim=self._term_dim,
+            term_dim=self._last_term_dim,
             align=align,
             clear_colour=clear_color,
             out_file=self._out_file
@@ -114,11 +111,18 @@ class TerminalContext(TerminalCompatibleContext):
         min_rows: int = 1,
         order: Literal['C', 'F'] = 'C'
     ) -> Console:
-        width, height = max(min_columns, self._term_dim[0]), max(min_rows, self._term_dim[1])
+        width, height = self.recommended_console_size()
         return Console(width, height, order=order)
 
     def recommended_console_size(self, min_columns: int = 1, min_rows: int = 1) -> Tuple[int, int]:
-        return max(min_columns, self._term_dim[0]), max(min_rows, self._term_dim[1])
+        new_term_dim = self._events_manager.get_terminal_dim()
+        if new_term_dim is None:
+            return (min_columns, min_rows)
+        self._last_term_dim = max(min_columns, new_term_dim[0]), max(min_rows, new_term_dim[1])
+        return self._last_term_dim
+
+    def _on_resize(self, dim: Tuple[int, int]) -> None:
+        self._last_term_dim = dim
 
 def get_terminal_context_stack() -> Sequence[TerminalContext]:
     return _context_stack
@@ -141,7 +145,7 @@ def make_terminal_context(
     new._out_file = out_file
     new._platform = make_platform(in_file)
     new._platform.open()
-    new._term_dim = (0, 0)
+    new._last_term_dim = (0, 0)
     new.cursor_position = (0, 0)
     new._events_manager = EventsManager(new._platform, new._out_file, new._on_resize)
     new._open(
@@ -150,6 +154,5 @@ def make_terminal_context(
         requested_chars_dim=requested_chars_dim,
         title=title,
     )
-    new._events_manager.request_resize_event()
     _context_stack.append(new)
     return new
