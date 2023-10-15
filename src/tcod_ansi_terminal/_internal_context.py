@@ -32,6 +32,7 @@ class TerminalContext(TerminalCompatibleContext):
     _out_file: BinaryIO
     _platform: Platform
     _last_term_dim: Tuple[int, int]
+    _cursor_visible: bool
     _cursor_position: Tuple[int, int]
     _events_manager: EventsManager
 
@@ -147,6 +148,18 @@ class TerminalContext(TerminalCompatibleContext):
     def cursor_position(self, value: Tuple[int, int]) -> None:
         self._cursor_position = value
 
+    @property
+    def cursor_visible(self) -> bool:
+        return self._cursor_visible
+
+    @cursor_visible.setter
+    def cursor_visible(self, value: bool) -> None:
+        if value:
+            _ansi.show_cursor(self._out_file)
+        else:
+            _ansi.hide_cursor(self._out_file)
+        self._cursor_visible = value
+
 def get_terminal_context_stack() -> Sequence[TerminalContext]:
     return _context_stack
 
@@ -169,6 +182,7 @@ def make_terminal_context(
     new._platform = make_platform(in_file)
     new._platform.open()
     new._last_term_dim = (0, 0)
+    new._cursor_visible = False
     new._cursor_position = (0, 0)
     new._events_manager = EventsManager(new._platform, new._out_file, new._on_resize)
     new._open(

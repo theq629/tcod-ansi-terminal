@@ -26,6 +26,13 @@ def main() -> None:
         help="Use the terminal instead of opening a new window."
     )
     argparser.add_argument(
+        '--cursor-visible',
+        dest='cursor_visible',
+        default=False,
+        action='store_true',
+        help="Make the terminal cursor visible."
+    )
+    argparser.add_argument(
         '--console-order',
         '-o',
         dest='console_order',
@@ -135,6 +142,7 @@ def main() -> None:
 
     if args.use_terminal:
         with tcod_ansi_terminal.context.new(**context_kwargs) as terminal_context:
+            terminal_context.cursor_visible = args.cursor_visible
             GameUi(
                 context=terminal_context,
                 event_wait=tcod_ansi_terminal.event.wait,
