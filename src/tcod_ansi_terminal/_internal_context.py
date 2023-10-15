@@ -23,14 +23,16 @@ class TerminalContext(TerminalCompatibleContext):
     """
     TCOD-compatible context that writes to a terminal.
 
-    `recommended_console_size()` is the real size of the terminal, and
-    `new_console()` will create a console that fits the terminal exactly.
+    The size of the terminal can be requested but is not guaranteed, and may
+    change at runtime after the context is created.
+    `recommended_console_size()` is the actual size of the terminal and
+    `new_console()` creates a console of that size.
     """
 
     _out_file: BinaryIO
     _platform: Platform
     _last_term_dim: Tuple[int, int]
-    cursor_position: Tuple[int, int]
+    _cursor_position: Tuple[int, int]
     _events_manager: EventsManager
 
     def _open(
@@ -81,6 +83,14 @@ class TerminalContext(TerminalCompatibleContext):
         align: Tuple[float, float] = (0.5, 0.5),
         presenter: Optional[Presenter] = None
     ) -> None:
+        """
+        Present a console to this context’s display.
+
+        `presenter` is the `Presenter` to use to control how the console is
+        written to the terminal. In general the presenter instance should be
+        reused between calls to `present()`. Other arguments are as for regular
+        TCOD `present()`.
+        """
         # pylint: disable=arguments-differ
         if presenter is None:
             presenter = NaivePresenter()
@@ -91,7 +101,7 @@ class TerminalContext(TerminalCompatibleContext):
             clear_colour=clear_color,
             out_file=self._out_file
         )
-        cur_x, cur_y = self.cursor_position
+        cur_x, cur_y = self._cursor_position
         _ansi.set_cursor_pos((cur_x + 1, cur_y + 1), self._out_file)
         self._out_file.flush()
 
@@ -105,10 +115,18 @@ class TerminalContext(TerminalCompatibleContext):
         return event
 
     def new_console(self, *, order: Literal['C', 'F'] = 'C') -> Console:
+        """
+        Return a new console sized for this context, that is with the actual
+        size of the terminal.
+        """
         width, height = self.recommended_console_size()
         return Console(width, height, order=order)
 
     def recommended_console_size(self) -> Tuple[int, int]:
+        """
+        Return the recommended size of a console for this context, which is
+        always the actual size of the terminal.
+        """
         new_term_dim = self._events_manager.get_terminal_dim()
         if new_term_dim is None:
             return (0, 0)
@@ -117,6 +135,17 @@ class TerminalContext(TerminalCompatibleContext):
 
     def _on_resize(self, dim: Tuple[int, int]) -> None:
         self._last_term_dim = dim
+
+    @property
+    def cursor_position(self) -> Tuple[int, int]:
+        """
+        The current position of the terminal cursor.
+        """
+        return self._cursor_position
+
+    @cursor_position.setter
+    def cursor_position(self, value: Tuple[int, int]) -> None:
+        self._cursor_position = value
 
 def get_terminal_context_stack() -> Sequence[TerminalContext]:
     return _context_stack
@@ -140,7 +169,7 @@ def make_terminal_context(
     new._platform = make_platform(in_file)
     new._platform.open()
     new._last_term_dim = (0, 0)
-    new.cursor_position = (0, 0)
+    new._cursor_position = (0, 0)
     new._events_manager = EventsManager(new._platform, new._out_file, new._on_resize)
     new._open(
         requested_window_pos=requested_window_pos,

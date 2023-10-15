@@ -147,6 +147,9 @@ def _draw_sparse_changes(
 class SparsePresenter:
     """
     Presenter which finds differences between frames and only writes the changes to the terminal.
+
+    May be faster than the naive presenter if you are usually updating only
+    small parts of the console. Needs to be reused between `present()` calls.
     """
 
     def __init__(self) -> None:
