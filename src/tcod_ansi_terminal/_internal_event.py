@@ -99,7 +99,10 @@ class EventsManager:
             )
 
     def _handle_key_press(self, key: bytes) -> Iterator[TerminalEvent]:
-        key_text = key.decode('ascii')
+        try:
+            key_text = key.decode('ascii')
+        except UnicodeDecodeError:
+            return
         if key.isupper():
             key = key.lower()
             mod = KMOD_SHIFT
