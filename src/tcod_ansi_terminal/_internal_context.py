@@ -23,8 +23,8 @@ class TerminalContext(TerminalCompatibleContext):
     """
     TCOD-compatible context that writes to a terminal.
 
-    `recommended_console_size()` with no set minimum is the real size of the terminal, and
-    `new_console()` with no set minimum will create a console that fits the terminal exactly.
+    `recommended_console_size()` is the real size of the terminal, and
+    `new_console()` will create a console that fits the terminal exactly.
     """
 
     _out_file: BinaryIO
@@ -104,21 +104,15 @@ class TerminalContext(TerminalCompatibleContext):
     def convert_event(self, event: E) -> E:
         return event
 
-    def new_console(
-        self,
-        *,
-        min_columns: int = 1,
-        min_rows: int = 1,
-        order: Literal['C', 'F'] = 'C'
-    ) -> Console:
+    def new_console(self, *, order: Literal['C', 'F'] = 'C') -> Console:
         width, height = self.recommended_console_size()
         return Console(width, height, order=order)
 
-    def recommended_console_size(self, min_columns: int = 1, min_rows: int = 1) -> Tuple[int, int]:
+    def recommended_console_size(self) -> Tuple[int, int]:
         new_term_dim = self._events_manager.get_terminal_dim()
         if new_term_dim is None:
-            return (min_columns, min_rows)
-        self._last_term_dim = max(min_columns, new_term_dim[0]), max(min_rows, new_term_dim[1])
+            return (0, 0)
+        self._last_term_dim = new_term_dim[0], new_term_dim[1]
         return self._last_term_dim
 
     def _on_resize(self, dim: Tuple[int, int]) -> None:

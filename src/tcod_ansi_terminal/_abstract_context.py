@@ -55,14 +55,8 @@ class TerminalCompatibleContext(Protocol):
     def convert_event(self, event: E) -> E:
         ...
 
-    def new_console(
-        self,
-        *,
-        min_columns: int = 1,
-        min_rows: int = 1,
-        order: Literal['C', 'F'] = 'C'
-    ) -> Console:
+    def new_console(self, *, order: Literal['C', 'F'] = 'C') -> Console:
         ...
 
-    def recommended_console_size(self, min_columns: int = 1, min_rows: int = 1) -> Tuple[int, int]:
+    def recommended_console_size(self) -> Tuple[int, int]:
         ...
