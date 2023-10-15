@@ -57,6 +57,8 @@ class GameUi:
     def _make_console(self, term_dim: Tuple[int, int]) -> Console:
         if self.verbose:
             print(f"TERMINAL SIZE {term_dim[0]}x{term_dim[1]}", file=sys.stderr)
+        # The console scale here is just for testing that present() doesn't
+        # crash if the console size is bigger or smaller than the terminal.
         console_dim = int(term_dim[0] * self.console_scale), int(term_dim[1] * self.console_scale)
         return Console(*console_dim, order=self.console_order)
 

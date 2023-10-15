@@ -39,7 +39,8 @@ def main() -> None:
         dest='console_scale',
         type=float,
         default=1.0,
-        help="The size of the TCOD console as a fraction of the terminal size."
+        help="The size of the TCOD console as a fraction of the terminal size. This is just for"
+             " testing with different console sizes relative to the terminal."
     )
     argparser.add_argument(
         '--presenter',
