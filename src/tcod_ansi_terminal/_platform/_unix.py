@@ -10,10 +10,10 @@ import signal
 import select
 
 class UnixPlatform:
-    # pylint: disable=no-self-use
-
     def __init__(self, in_file: BinaryIO):
         self.old_attrs: Optional[List[Union[int, List[Union[bytes, int]]]]] = None
+        # We need an extra pipe here so that we can interrupt any getch() call
+        # on a signal.
         self._pipe_r, self._pipe_w = os.pipe()
         os.set_blocking(self._pipe_w, False)
         self.in_file = in_file.fileno()

@@ -9,9 +9,9 @@ except ImportError:
     from typing_extensions import Protocol # type: ignore
 from numpy.typing import NDArray
 import numpy
-from tcod import Console
+from tcod.console import Console
 from ._console_utils import get_console_order
-from ._ansi import make_set_colours_true
+from ._ansi import escape, make_set_colours_true
 
 _PAD_FG = (0, 0, 0, 0)
 
@@ -44,7 +44,7 @@ def _get_draw_plan(
 ) -> _DrawPlan:
     order = get_console_order(console)
 
-    con_dim = console.buffer.shape
+    con_dim = console.rgba.shape
     if order == "F":
         def buf_get(x: int, y: int, buf: NDArray[Any]) -> Any:
             return buf[x, y]
@@ -76,27 +76,27 @@ def _draw_naive(
 
     yield make_set_colours_true(_PAD_FG, pad_bg)
     for _ in range(pad_top):
-        yield b"[%i;1H" % (term_y)
-        yield b"[2K"
+        yield b"%s[%i;1H" % (escape, term_y)
+        yield b"%s[2K" % (escape)
         term_y += 1
 
     for con_y in range(draw_dim[1]):
-        yield b"[%i;%iH" % (term_y, pad_left + 1)
+        yield b"%s[%i;%iH" % (escape, term_y, pad_left + 1)
         yield make_set_colours_true(_PAD_FG, pad_bg)
-        yield b"[1K"
+        yield b"%s[1K" % (escape)
         for con_x in range(draw_dim[0]):
-            c, fg, bg = buf_get(con_x, con_y, console.buffer)
+            c, fg, bg = buf_get(con_x, con_y, console.rgba)
             yield make_set_colours_true(fg, bg)
             yield c
         if pad_right > 0:
             yield make_set_colours_true(_PAD_FG, pad_bg)
-            yield b"[0K"
+            yield b"%s[0K" % (escape)
         term_y += 1
 
     yield make_set_colours_true(_PAD_FG, pad_bg)
     for _ in range(pad_bottom):
-        yield b"[%i;1H" % (term_y)
-        yield b"[2K"
+        yield b"%s[%i;1H" % (escape, term_y)
+        yield b"%s[2K" % (escape)
         term_y += 1
 
 class NaivePresenter(Presenter):
@@ -127,7 +127,6 @@ class NaivePresenter(Presenter):
             buf_get=buf_get,
             console=console
         )))
-        out_file.flush()
 
 def _draw_sparse_changes(
     *,
@@ -138,16 +137,19 @@ def _draw_sparse_changes(
     to_draw: NDArray[Any],
     console: Console
 ) -> Iterable[bytes]:
-    for con_x, con_y in numpy.ndindex(draw_dim): # type: ignore
+    for con_x, con_y in numpy.ndindex(draw_dim):
         if buf_get(con_x, con_y, to_draw):
-            yield b"[%i;%iH" % (con_y + pad_top, con_x + pad_left)
-            c, fg, bg = buf_get(con_x, con_y, console.buffer)
+            yield b"%s[%i;%iH" % (escape, con_y + pad_top, con_x + pad_left)
+            c, fg, bg = buf_get(con_x, con_y, console.rgba)
             yield make_set_colours_true(fg, bg)
             yield c
 
 class SparsePresenter:
     """
     Presenter which finds differences between frames and only writes the changes to the terminal.
+
+    May be faster than the naive presenter if you are usually updating only
+    small parts of the console. Needs to be reused between `present()` calls.
     """
 
     def __init__(self) -> None:
@@ -165,7 +167,7 @@ class SparsePresenter:
     ) -> None:
         # pylint: disable=too-many-locals
 
-        if console.buffer.shape != self._last_buffer.shape:
+        if console.rgba.shape != self._last_buffer.shape:
             self._fallback.present(
                 console=console,
                 term_dim=term_dim,
@@ -176,7 +178,7 @@ class SparsePresenter:
 
         else:
             draw_dim, pad_left, pad_top, buf_get = _get_draw_plan(console, term_dim, align)
-            diff = console.buffer != self._last_buffer
+            diff = console.rgba != self._last_buffer
             out_file.write(b''.join(_draw_sparse_changes(
                 draw_dim=draw_dim,
                 pad_left=pad_left + 1,
@@ -186,6 +188,4 @@ class SparsePresenter:
                 console=console
             )))
 
-        self._last_buffer = numpy.copy(console.buffer) # type: ignore
-
-        out_file.flush()
+        self._last_buffer = numpy.copy(console.rgba)

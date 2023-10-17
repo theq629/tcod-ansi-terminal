@@ -8,12 +8,13 @@ try:
     from typing import Literal, Protocol # pylint: disable=ungrouped-imports
 except ImportError:
     from typing_extensions import Literal, Protocol # type: ignore
-from tcod import Console
+from tcod.console import Console
 from tcod.event import Event
 
-C = TypeVar('C', bound="MinimalContext")
+C = TypeVar('C', bound="TerminalCompatibleContext")
+E = TypeVar("E", bound=Event)
 
-class MinimalContext(Protocol):
+class TerminalCompatibleContext(Protocol):
     """
     Protocol for contexts which covers basic functionality that can be supported on terminals.
 
@@ -51,17 +52,11 @@ class MinimalContext(Protocol):
     def pixel_to_subtile(self, x: int, y: int) -> Tuple[float, float]:
         ...
 
-    def convert_event(self, event: Event) -> None:
+    def convert_event(self, event: E) -> E:
         ...
 
-    def new_console(
-        self,
-        *,
-        min_columns: int = 1,
-        min_rows: int = 1,
-        order: Literal['C', 'F'] = 'C'
-    ) -> Console:
+    def new_console(self, *, order: Literal['C', 'F'] = 'C') -> Console:
         ...
 
-    def recommended_console_size(self, min_columns: int = 1, min_rows: int = 1) -> Tuple[int, int]:
+    def recommended_console_size(self) -> Tuple[int, int]:
         ...

@@ -1,0 +1,42 @@
+[project]
+name = "tcod-ansi-terminal"
+version = "0.1.0"
+requires-python = ">3.8"
+description = "ANSI terminal support for Python TCOD."
+authors = [
+    {name = "Max Whitney", email = "mwhitney@alumni.sfu.ca"},
+]
+readme = "README.md"
+license = {text = "BSD-3-Clause"}
+keywords = [
+    "roguelike",
+    "libtcod",
+    "terminal",
+    "ansi",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Intended Audience :: Developers",
+    "Environment :: Console",
+    "Operating System :: Unix",
+    "Operating System :: MacOS :: MacOS X",
+    "Topic :: Terminals",
+    "Topic :: Games/Entertainment",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = [
+    'numpy', # just needs to match tcod
+    'tcod~=16.2',
+    'typing-extensions~=4.7; python_version < "3.8"'
+]
+
+[tool.setuptools.package-data]
+tcod_ansi_terminal = ["py.typed"]

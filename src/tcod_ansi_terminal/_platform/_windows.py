@@ -8,8 +8,6 @@ from typing import Callable, Optional, BinaryIO
 import msvcrt # pylint: disable=import-error
 
 class WindowsPlatform:
-    # pylint: disable=no-self-use
-
     def __init__(self, in_file: BinaryIO):
         self.in_file = in_file
 
