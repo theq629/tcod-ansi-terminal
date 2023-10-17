@@ -1,7 +1,7 @@
 [project]
 name = "tcod-ansi-terminal"
 version = "0.0.1"
-requires-python = ">3.7"
+requires-python = ">3.8"
 description = "ANSI terminal support for Python TCOD."
 authors = [
     {name = "Max Whitney", email = "mwhitney@alumni.sfu.ca"},
@@ -18,7 +18,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "License :: OSI Approved :: BSD License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -35,7 +34,7 @@ classifiers = [
 ]
 dependencies = [
     'numpy', # just needs to match tcod
-    'tcod~=16.1',
+    'tcod~=16.2',
     'typing-extensions~=4.7; python_version < "3.8"'
 ]
 
