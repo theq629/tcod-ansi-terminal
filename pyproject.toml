@@ -38,5 +38,10 @@ dependencies = [
     'typing-extensions~=4.7; python_version < "3.8"'
 ]
 
+[project.urls]
+Home = "https://github.com/theq629/tcod-ansi-terminal"
+Repository = "https://github.com/theq629/tcod-ansi-terminal"
+Documentation = "https://tcod-ansi-terminal.readthedocs.io/"
+
 [tool.setuptools.package-data]
 tcod_ansi_terminal = ["py.typed"]
