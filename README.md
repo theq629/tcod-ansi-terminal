@@ -1,8 +1,8 @@
 # tcod-ansi-terminal
 
-[![test](https://github.com/theq629/tcod-ansi-terminal/actions/workflows/test.yml/badge.svg)](https://github.com/theq629/tcod-ansi-terminal/actions/workflows/test.yml)
-[![docs](https://readthedocs.org/projects/tcod-ansi-terminal/badge/?version=latest&style=flat)](https://tcod-ansi-terminal.readthedocs.io/en/latest/)
-[![pypi](https://badge.fury.io/py/tcod-ansi-terminal.svg)](https://badge.fury.io/py/tcod-ansi-terminal)
+[![Test](https://github.com/theq629/tcod-ansi-terminal/actions/workflows/test.yml/badge.svg)](https://github.com/theq629/tcod-ansi-terminal/actions/workflows/test.yml)
+[![Docs](https://readthedocs.org/projects/tcod-ansi-terminal/badge/?version=latest&style=flat)](https://tcod-ansi-terminal.readthedocs.io/en/latest/)
+[![PyPI](https://badge.fury.io/py/tcod-ansi-terminal.svg)](https://badge.fury.io/py/tcod-ansi-terminal)
 
 Minimal true colour ANSI terminal support for Python TCOD (`tcod`).
 
